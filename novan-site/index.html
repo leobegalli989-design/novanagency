@@ -81,77 +81,88 @@
         };
 
         // --- Firestore Realtime Listener for Feedbacks ---
-        const loadFeedbacks = async () => { 
-            if (!db) return;
-
-            // Path: /artifacts/{appId}/public/data/novan_content
-            const feedbacksRef = collection(db, `artifacts/${appId}/public/data/novan_feedbacks`);
+        const loadFeedbacks = async () => {
             const feedbacksList = document.getElementById('feedbacks-list');
-            
-            // Initial mock data if collection is empty
-            const addMockData = async () => {
-                const q = query(feedbacksRef);
-                const snapshot = await getDocs(q);
-                if (snapshot.empty) {
-                    // MOCK DATA ATUALIZADA COM OS NOVOS DEPOIMENTOS
-                    const mockFeedbacks = [
-                        { author: "Lucas M., empresário.", text: "A Novan Agência transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
-                        { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agência trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
-                        { author: "João P., empreendedor digital.", text: "Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou.", rating: 5, date: serverTimestamp() },
-                        { author: "Mariana L., CEO.", text: "O atendimento da Novan é impecável. Sempre atentos às nossas necessidades e com ideias criativas para nosso crescimento.", rating: 5, date: serverTimestamp() },
-                        { author: "Rafael T., dono de e-commerce.", text: "Serviço impecável! A Novan Agência fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!", rating: 5, date: serverTimestamp() },
-                        { author: "Camila R., influenciadora digital.", text: "Criatividade, estratégia e resultados. É isso que encontramos na Novan Agência. Recomendo sem dúvidas!", rating: 5, date: serverTimestamp() },
-                        { author: "Felipe G., empresário.", text: "Equipe muito qualificada e extremamente eficiente. Nosso ROI melhorou muito desde que contratamos a Novan.", rating: 5, date: serverTimestamp() },
-                        { author: "Laura C., empreendedora.", text: "Trabalho impecável! A Novan Agência realmente entende as necessidades do cliente e entrega resultados acima da expectativa.", rating: 5, date: serverTimestamp() },
-                        { author: "Beatriz V., fundadora de startup.", text: "Contratar a Novan foi o melhor investimento que fizemos. A expertise em branding e marketing digital elevou nossa marca a outro patamar.", rating: 5, date: serverTimestamp() }
-                    ];
-                    for (const data of mockFeedbacks) {
-                        await addDoc(feedbacksRef, data).catch(e => console.error("Erro ao adicionar mock data:", e));
-                    }
-                    console.log("Mock data de feedbacks adicionada.");
-                }
-            };
+            // Early exit if the element doesn't exist on the page
+            if (!feedbacksList) {
+                console.error("Elemento 'feedbacks-list' não encontrado.");
+                return;
+            }
+            // Early exit if DB connection isn't ready
+            if (!db) {
+                feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro: a conexão com a base de dados falhou.</p>';
+                return;
+            }
 
-            await addMockData(); 
-
-            // Real-time listener
-            onSnapshot(feedbacksRef, (snapshot) => {
-                feedbacksList.innerHTML = '';
-                const feedbacks = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    feedbacks.push({ id: doc.id, ...data });
-                });
-
-                // Sort by date (newest first, if date exists)
-                feedbacks.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
-
-                if (feedbacks.length === 0) {
-                    feedbacksList.innerHTML = '<p class="text-gray-400 text-center col-span-1 md:col-span-3">Nenhum feedback disponível no momento.</p>';
-                    return;
-                }
-
-                feedbacks.forEach((f, index) => {
-                    const ratingHtml = Array(f.rating || 5).fill('<i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i>').join('');
-                    // FIX: Removida a classe 'animate-on-scroll' do card de feedback
-                    const feedbackElement = `
-                        <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300" style="transition-delay: ${index * 100}ms;">
-                            <div class="flex items-center mb-3">
-                                ${ratingHtml}
-                            </div>
-                            <p class="text-lg italic text-gray-200 mb-4">"${f.text}"</p>
-                            <p class="font-bold text-nova-neon">${f.author}</p>
-                        </div>
-                    `;
-                    feedbacksList.innerHTML += feedbackElement;
-                });
+            try {
+                // Path: /artifacts/{appId}/public/data/novan_feedbacks
+                const feedbacksRef = collection(db, `artifacts/${appId}/public/data/novan_feedbacks`);
                 
-                // Re-render Lucide icons after adding HTML
-                lucide.createIcons();
-            }, (error) => {
-                console.error("Erro ao carregar feedbacks em tempo real:", error);
-                feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro ao carregar dados.</p>';
-            });
+                // Initial mock data if collection is empty
+                const addMockData = async () => {
+                    const q = query(feedbacksRef);
+                    const snapshot = await getDocs(q);
+                    if (snapshot.empty) {
+                        console.log("A coleção de feedbacks está vazia. Adicionando dados mock.");
+                        const mockFeedbacks = [
+                            { author: "Lucas M., empresário.", text: "A Novan Agência transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
+                            { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agência trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
+                            { author: "João P., empreendedor digital.", text: "Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou.", rating: 5, date: serverTimestamp() },
+                            { author: "Mariana L., CEO.", text: "O atendimento da Novan é impecável. Sempre atentos às nossas necessidades e com ideias criativas para nosso crescimento.", rating: 5, date: serverTimestamp() },
+                            { author: "Rafael T., dono de e-commerce.", text: "Serviço impecável! A Novan Agência fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!", rating: 5, date: serverTimestamp() },
+                            { author: "Camila R., influenciadora digital.", text: "Criatividade, estratégia e resultados. É isso que encontramos na Novan Agência. Recomendo sem dúvidas!", rating: 5, date: serverTimestamp() },
+                            { author: "Felipe G., empresário.", text: "Equipe muito qualificada e extremamente eficiente. Nosso ROI melhorou muito desde que contratamos a Novan.", rating: 5, date: serverTimestamp() },
+                            { author: "Laura C., empreendedora.", text: "Trabalho impecável! A Novan Agência realmente entende as necessidades do cliente e entrega resultados acima da expectativa.", rating: 5, date: serverTimestamp() },
+                            { author: "Beatriz V., fundadora de startup.", text: "Contratar a Novan foi o melhor investimento que fizemos. A expertise em branding e marketing digital elevou nossa marca a outro patamar.", rating: 5, date: serverTimestamp() }
+                        ];
+                        // Using Promise.all for potentially faster insertion
+                        await Promise.all(mockFeedbacks.map(data => addDoc(feedbacksRef, data)));
+                        console.log("Mock data de feedbacks adicionada.");
+                    }
+                };
+
+                await addMockData(); 
+
+                // Real-time listener
+                onSnapshot(feedbacksRef, (snapshot) => {
+                    feedbacksList.innerHTML = '';
+                    const feedbacks = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        feedbacks.push({ id: doc.id, ...data });
+                    });
+
+                    feedbacks.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+
+                    if (feedbacks.length === 0) {
+                        feedbacksList.innerHTML = '<p class="text-gray-400 text-center col-span-1 md:col-span-3">Nenhum feedback disponível no momento.</p>';
+                        return;
+                    }
+
+                    feedbacks.forEach((f, index) => {
+                        const ratingHtml = Array(f.rating || 5).fill('<i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i>').join('');
+                        const feedbackElement = `
+                            <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300" style="transition-delay: ${index * 100}ms;">
+                                <div class="flex items-center mb-3">
+                                    ${ratingHtml}
+                                </div>
+                                <p class="text-lg italic text-gray-200 mb-4">"${f.text}"</p>
+                                <p class="font-bold text-nova-neon">${f.author}</p>
+                            </div>
+                        `;
+                        feedbacksList.innerHTML += feedbackElement;
+                    });
+                    
+                    lucide.createIcons();
+                }, (error) => {
+                    console.error("Erro ao carregar feedbacks em tempo real:", error);
+                    feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro ao carregar dados.</p>';
+                });
+
+            } catch(error) {
+                console.error("Erro geral na função loadFeedbacks:", error);
+                feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Ocorreu um erro crítico ao buscar os depoimentos.</p>';
+            }
         };
 
         // --- Handle Form Submission ---
