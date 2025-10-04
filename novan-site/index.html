@@ -127,10 +127,10 @@
                     return;
                 }
 
-                feedbacks.forEach(f => {
+                feedbacks.forEach((f, index) => {
                     const ratingHtml = Array(f.rating || 5).fill('<i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i>').join('');
                     const feedbackElement = `
-                        <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300">
+                        <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: ${index * 100}ms;">
                             <div class="flex items-center mb-3">
                                 ${ratingHtml}
                             </div>
@@ -143,6 +143,8 @@
                 
                 // Re-render Lucide icons after adding HTML
                 lucide.createIcons();
+                // Observa os novos elementos de feedback que foram adicionados
+                if (window.observeNewElements) window.observeNewElements();
             }, (error) => {
                 console.error("Erro ao carregar feedbacks em tempo real:", error);
                 feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro ao carregar dados.</p>';
@@ -261,6 +263,17 @@
             pointer-events: none;
             z-index: 5; /* Garante que fique atrás do texto principal (z-10) */
         }
+        
+        /* --- Animação de Scroll --- */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="futuristic-gradient">
@@ -276,7 +289,7 @@
 
             <!-- Menu Desktop -->
             <div class="hidden md:flex space-x-8">
-                <a href="#home" class="text-gray-300 hover:text-nova-neon transition duration-300">Home</a>
+                <a href="#home" class="text-gray-300 hover:text-nova-neon transition duration-300">Início</a>
                 <a href="#sobre" class="text-gray-300 hover:text-nova-neon transition duration-300">Sobre</a>
                 <a href="#servicos" class="text-gray-300 hover:text-nova-neon transition duration-300">Serviços</a>
                 <a href="#feedbacks" class="text-gray-300 hover:text-nova-neon transition duration-300">Feedbacks</a>
@@ -291,7 +304,7 @@
 
         <!-- Menu Mobile (oculto por padrão) -->
         <div id="mobile-menu" class="hidden md:hidden bg-black/90 pt-2 pb-4 space-y-3 px-4 text-center">
-            <a href="#home" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Home</a>
+            <a href="#home" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Início</a>
             <a href="#sobre" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Sobre</a>
             <a href="#servicos" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Serviços</a>
             <a href="#feedbacks" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Feedbacks</a>
@@ -336,27 +349,27 @@
         <!-- Sobre Section -->
         <section id="sobre" class="py-20 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">SOBRE A <span class="text-nova-neon">NOVAN</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">SOBRE A <span class="text-nova-neon">NOVAN</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">
                     Nascemos para desafiar o status quo. Somos uma agência full-service com DNA focado em soluções que antecipam o amanhã.
                 </p>
 
                 <div class="grid md:grid-cols-3 gap-10 text-left">
                     <!-- Missão -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll">
                         <i data-lucide="rocket" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Missão</h3>
                         <p class="text-gray-300">Transformar visões em realidades digitais impactantes, impulsionando o crescimento sustentável de nossos clientes através da vanguarda tecnológica.</p>
                     </div>
                     <!-- Visão -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 150ms;">
                         <i data-lucide="eye" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Visão</h3>
                         <p class="text-gray-300">Ser a agência referência em inovação e design futurista no mercado global, redefinindo os padrões de excelência digital.</p>
                     </div>
                     <!-- Valores -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 300ms;">
                         <i data-lucide="gem" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Valores</h3>
                         <p class="text-gray-300">Inovação contínua, Transparência, Colaboração, Excelência e Paixão pelo resultado.</p>
@@ -368,47 +381,47 @@
         <!-- Serviços Section -->
         <section id="servicos" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">NOSSOS <span class="text-nova-neon">SERVIÇOS</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">NOSSOS <span class="text-nova-neon">SERVIÇOS</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">
                     A arquitetura digital que sua empresa precisa para dominar o mercado do futuro.
                 </p>
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
                     <!-- Serviço 1: Web Design Futurista -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll">
                         <i data-lucide="monitor" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Web Design Futurista</h3>
                         <p class="text-gray-400">Criação de websites, landing pages e e-commerces ultra-modernos, focados em usabilidade e performance em todas as plataformas.</p>
                     </div>
                     
                     <!-- Serviço 2: Gestão Empresarial (NOVO) -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 100ms;">
                         <i data-lucide="briefcase" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Gestão Empresarial</h3>
                         <p class="text-gray-400">Consultoria estratégica e implementação de sistemas para otimização de processos, melhoria de performance e planejamento de crescimento.</p>
                     </div>
                     
                     <!-- Serviço 3: Branding e Identidade Visual -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 200ms;">
                         <i data-lucide="palette" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Branding e Identidade Visual</h3>
                         <p class="text-gray-400">Construção de marcas poderosas e identidades visuais que comunicam inovação e exclusividade em qualquer meio.</p>
                     </div>
                     <!-- Serviço 4: Marketing Digital Estratégico -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 300ms;">
                         <i data-lucide="trending-up" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Marketing Digital Estratégico</h3>
                         <p class="text-gray-400">SEO, campanhas de tráfego pago (Ads) e estratégias de conteúdo para garantir visibilidade e conversão em alta performance.</p>
                     </div>
                     <!-- Serviço 5: Consultoria de Inovação -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 400ms;">
                         <i data-lucide="lightbulb" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Consultoria de Inovação</h3>
                         <p class="text-gray-400">Análise, planejamento e implementação de tecnologias emergentes (IA, Blockchain) para manter sua empresa à frente da concorrência.</p>
                     </div>
                     <!-- Serviço 6: Produção de Vídeo e Motion -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 500ms;">
                         <i data-lucide="video" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Produção de Vídeo e Motion</h3>
                         <p class="text-gray-400">Criação de vídeos institucionais, animadas e motion graphics com acabamento cinematográfico e visual futurista.</p>
@@ -420,9 +433,9 @@
         <!-- Feedbacks Section -->
         <section id="feedbacks" class="py-20 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">O QUE DIZEM NOSSOS <span class="text-nova-neon">CLIENTES</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">O QUE DIZEM NOSSOS <span class="text-nova-neon">CLIENTES</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12 animate-on-scroll">
                     Nossos parceiros e a prova do nosso impacto no mercado.
                 </p>
 
@@ -437,12 +450,12 @@
         <!-- Contato Section -->
         <section id="contato" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
             <div class="max-w-7xl mx-auto">
-                <h2 class="text-4xl font-bold mb-4 text-center text-white">COMECE SEU <span class="text-nova-neon">PROJETO</span></h2>
-                <div class="section-separator"></div>
+                <h2 class="text-4xl font-bold mb-4 text-center text-white animate-on-scroll">COMECE SEU <span class="text-nova-neon">PROJETO</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
 
                 <div class="grid lg:grid-cols-2 gap-12 mt-12">
                     <!-- Formulário de Contato -->
-                    <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-2xl">
+                    <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-2xl animate-on-scroll">
                         <h3 class="text-2xl font-semibold text-white mb-6">Fale com um Especialista</h3>
                         
                         <form onsubmit="window.handleContactSubmit(event)" class="space-y-4">
@@ -472,7 +485,7 @@
                     </div>
 
                     <!-- Informações e Mapa -->
-                    <div class="space-y-8">
+                    <div class="space-y-8 animate-on-scroll" style="transition-delay: 150ms;">
                         <!-- Contatos Diretos -->
                         <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl space-y-6">
                             <h3 class="text-2xl font-semibold text-white mb-4">Conexão Imediata</h3>
@@ -584,6 +597,29 @@
             });
         });
 
+        // --- Lógica de Animação de Scroll com Intersection Observer (SEMPRE ATIVA) ---
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                } else {
+                    entry.target.classList.remove('is-visible');
+                }
+            });
+        }, { threshold: 0.1 }); // Anima quando 10% do elemento está visível
+
+        // Função para encontrar e observar elementos (estáticos e dinâmicos)
+        window.observeNewElements = () => {
+            const animatedElements = document.querySelectorAll('.animate-on-scroll'); // Seleciona todos, mesmo os já visíveis
+            animatedElements.forEach(el => {
+                scrollObserver.observe(el);
+            });
+        };
+
+        // Observa os elementos que já existem na página ao carregar
+        window.observeNewElements();
+
+
         // --- Guia Administrativo (Informando a funcionalidade atual) ---
         console.log("--- GUIA ADMINISTRATIVO (Simulação Firestore) ---");
         console.log("CONFIRMADO: O formulário de Contato está salvando os leads na coleção:");
@@ -594,7 +630,4 @@
     </script>
 </body>
 </html>
-
-
-
 
