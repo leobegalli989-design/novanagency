@@ -37,13 +37,24 @@
 
         // Global variables provided by the environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // FIX: Alterado de {} para null para uma verificação mais segura
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let app, db, auth, userId;
 
         // Function to initialize Firebase and sign in
         const initFirebase = async () => {
+            const feedbacksList = document.getElementById('feedbacks-list');
+            // FIX: Adicionado um guarda para o caso de a configuração do Firebase não ser fornecida
+            if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+                console.error("Configuração do Firebase não encontrada ou vazia.");
+                if (feedbacksList) {
+                    feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro de configuração. Não foi possível carregar os depoimentos.</p>';
+                }
+                return; // Impede a continuação da execução
+            }
+
             try {
                 // setLogLevel('Debug'); // Enable for debugging
                 app = initializeApp(firebaseConfig);
@@ -72,8 +83,6 @@
                 loadFeedbacks();
             } catch (error) {
                 console.error("Erro ao inicializar Firebase ou autenticação:", error);
-                // FIX: Exibe o erro no local correto, evitando que o script pare
-                const feedbacksList = document.getElementById('feedbacks-list');
                 if(feedbacksList) {
                     feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Ocorreu um erro ao carregar os depoimentos.</p>';
                 }
@@ -83,27 +92,22 @@
         // --- Firestore Realtime Listener for Feedbacks ---
         const loadFeedbacks = async () => {
             const feedbacksList = document.getElementById('feedbacks-list');
-            // Early exit if the element doesn't exist on the page
             if (!feedbacksList) {
                 console.error("Elemento 'feedbacks-list' não encontrado.");
                 return;
             }
-            // Early exit if DB connection isn't ready
             if (!db) {
                 feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro: a conexão com a base de dados falhou.</p>';
                 return;
             }
 
             try {
-                // Path: /artifacts/{appId}/public/data/novan_feedbacks
                 const feedbacksRef = collection(db, `artifacts/${appId}/public/data/novan_feedbacks`);
                 
-                // Initial mock data if collection is empty
                 const addMockData = async () => {
                     const q = query(feedbacksRef);
                     const snapshot = await getDocs(q);
                     if (snapshot.empty) {
-                        console.log("A coleção de feedbacks está vazia. Adicionando dados mock.");
                         const mockFeedbacks = [
                             { author: "Lucas M., empresário.", text: "A Novan Agência transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
                             { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agência trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
@@ -115,7 +119,6 @@
                             { author: "Laura C., empreendedora.", text: "Trabalho impecável! A Novan Agência realmente entende as necessidades do cliente e entrega resultados acima da expectativa.", rating: 5, date: serverTimestamp() },
                             { author: "Beatriz V., fundadora de startup.", text: "Contratar a Novan foi o melhor investimento que fizemos. A expertise em branding e marketing digital elevou nossa marca a outro patamar.", rating: 5, date: serverTimestamp() }
                         ];
-                        // Using Promise.all for potentially faster insertion
                         await Promise.all(mockFeedbacks.map(data => addDoc(feedbacksRef, data)));
                         console.log("Mock data de feedbacks adicionada.");
                     }
@@ -123,13 +126,11 @@
 
                 await addMockData(); 
 
-                // Real-time listener
                 onSnapshot(feedbacksRef, (snapshot) => {
                     feedbacksList.innerHTML = '';
                     const feedbacks = [];
                     snapshot.forEach(doc => {
-                        const data = doc.data();
-                        feedbacks.push({ id: doc.id, ...data });
+                        feedbacks.push({ id: doc.id, ...doc.data() });
                     });
 
                     feedbacks.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
@@ -141,8 +142,9 @@
 
                     feedbacks.forEach((f, index) => {
                         const ratingHtml = Array(f.rating || 5).fill('<i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i>').join('');
+                        // FIX: Adicionada a classe 'animate-on-scroll' de volta
                         const feedbackElement = `
-                            <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300" style="transition-delay: ${index * 100}ms;">
+                            <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: ${index * 100}ms;">
                                 <div class="flex items-center mb-3">
                                     ${ratingHtml}
                                 </div>
@@ -154,6 +156,8 @@
                     });
                     
                     lucide.createIcons();
+                    // FIX: Chama o observador de animação para os novos elementos
+                    if (window.observeNewElements) window.observeNewElements();
                 }, (error) => {
                     console.error("Erro ao carregar feedbacks em tempo real:", error);
                     feedbacksList.innerHTML = '<p class="text-red-500 text-center col-span-1 md:col-span-3">Erro ao carregar dados.</p>';
@@ -171,7 +175,6 @@
             const form = event.target;
             const statusDiv = document.getElementById('form-status');
             
-            // 1. Prepara UI
             statusDiv.textContent = 'Enviando...';
             statusDiv.classList.remove('text-green-400', 'text-red-400');
             statusDiv.classList.add('text-nova-neon');
@@ -183,22 +186,18 @@
             }
 
             try {
-                // 2. Coleta dados
                 const leadData = {
                     name: form.name.value,
                     email: form.email.value,
                     phone: form.phone.value,
                     message: form.message.value,
                     timestamp: serverTimestamp(),
-                    // Path: /artifacts/{appId}/users/{userId}/novan_leads
                     captured_by_user_id: userId 
                 };
                 
-                // 3. Salva no Firestore
                 const leadsRef = collection(db, `artifacts/${appId}/users/${userId}/novan_leads`);
                 await addDoc(leadsRef, leadData);
 
-                // 4. Atualiza UI e reseta o formulário
                 statusDiv.textContent = 'Mensagem enviada com sucesso! Em breve entraremos em contato.';
                 statusDiv.classList.remove('text-nova-neon');
                 statusDiv.classList.add('text-green-400');
@@ -217,19 +216,16 @@
         /* Estilos customizados para o design futurista */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d0d17; /* Preto bem escuro/azulado */
-            color: #e5e7eb; /* Cinza claro para texto */
+            background-color: #0d0d17;
+            color: #e5e7eb;
         }
         .futuristic-gradient {
-            /* Baseado no roxo original, mas levemente ajustado para o novo neon */
             background: linear-gradient(135deg, #0d0d17 0%, #1a082a 50%, #0d0d17 100%);
         }
         .neon-glow {
-            /* GLOW SUAVIZADO: Redução de 15/30/45px para 8/15/25px */
             box-shadow: 0 0 8px #A73CFF, 0 0 15px #A73CFF, 0 0 25px #D8A0FF;
         }
         .neon-text-glow {
-            /* GLOW SUAVIZADO: Redução de 5/10/15px para 2/4/8px para melhorar a leitura */
             text-shadow: 0 0 2px #A73CFF, 0 0 4px #A73CFF, 0 0 8px rgba(216, 160, 255, 0.5);
         }
         .neon-border {
@@ -246,7 +242,6 @@
             margin: 2rem auto;
             border-radius: 9999px;
         }
-        /* Ocultar scrollbar, mantendo a funcionalidade de scroll */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -254,31 +249,35 @@
             background: #A73CFF;
             border-radius: 4px;
         }
-
-        /* Estilo para garantir que o iframe do mapa ocupe 100% do seu container */
         .map-container iframe {
             width: 100%;
             height: 100%;
         }
-
-        /* --- Efeito de Xadrez Obscuro e Desfocado --- */
         .chess-pattern {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* Cria um padrão de xadrez usando gradiente repetido */
             background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.5) 0, rgba(0,0,0,0.5) 50px, rgba(20,20,20,0.5) 50px, rgba(20,20,20,0.5) 100px);
-            background-size: 100px 100px; /* Tamanho dos "quadrados" */
-            filter: blur(15px) brightness(0.7); /* Desfoque intenso e escurecimento */
-            opacity: 0.1; /* Sutil transparência */
-            transform: rotate(5deg) scale(1.5); /* Leve rotação e escala para preencher */
+            background-size: 100px 100px;
+            filter: blur(15px) brightness(0.7);
+            opacity: 0.1;
+            transform: rotate(5deg) scale(1.5);
             pointer-events: none;
-            z-index: 5; /* Garante que fique atrás do texto principal (z-10) */
+            z-index: 5;
         }
         
-        /* --- Animação de Scroll REMOVIDA --- */
+        /* FIX: Animações de scroll reativadas */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
         
     </style>
 </head>
@@ -324,13 +323,11 @@
             <!-- Efeito de Fundo Abstrato/Futurista (SVG) -->
             <div class="absolute inset-0 opacity-10 pointer-events-none">
                 <svg class="w-full h-full" viewBox="0 0 1440 810" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Cores ajustadas para o novo neon -->
                     <path d="M-100 405C-100 207.228 153.28 45 460 45C766.72 45 1070.78 300 1200 405C1329.22 510 1622 300 1622 405V810H-100V405Z" fill="#A73CFF"/>
                     <path d="M-100 455C-100 257.228 153.28 95 460 95C766.72 95 1070.78 350 1200 455C1329.22 560 1622 350 1622 455V810H-100V455Z" fill="#D8A0FF" opacity="0.3"/>
                 </svg>
             </div>
             
-            <!-- Efeito de Xadrez Obscuro e Desfocado -->
             <div class="chess-pattern"></div> 
 
             <div class="max-w-7xl mx-auto text-center relative z-10">
@@ -355,27 +352,24 @@
         <!-- Sobre Section -->
         <section id="sobre" class="py-20 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">SOBRE A <span class="text-nova-neon">NOVAN</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">SOBRE A <span class="text-nova-neon">NOVAN</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">
                     Nascemos para desafiar o status quo. Somos uma agência full-service com DNA focado em soluções que antecipam o amanhã.
                 </p>
 
                 <div class="grid md:grid-cols-3 gap-10 text-left">
-                    <!-- Missão -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll">
                         <i data-lucide="rocket" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Missão</h3>
                         <p class="text-gray-300">Transformar visões em realidades digitais impactantes, impulsionando o crescimento sustentável de nossos clientes através da vanguarda tecnológica.</p>
                     </div>
-                    <!-- Visão -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 150ms;">
                         <i data-lucide="eye" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Visão</h3>
                         <p class="text-gray-300">Ser a agência referência em inovação e design futurista no mercado global, redefinindo os padrões de excelência digital.</p>
                     </div>
-                    <!-- Valores -->
-                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 300ms;">
                         <i data-lucide="gem" class="w-10 h-10 text-nova-neon mb-4 neon-glow-sm"></i>
                         <h3 class="text-2xl font-semibold text-white mb-3">Valores</h3>
                         <p class="text-gray-300">Inovação contínua, Transparência, Colaboração, Excelência e Paixão pelo resultado.</p>
@@ -387,47 +381,39 @@
         <!-- Serviços Section -->
         <section id="servicos" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">NOSSOS <span class="text-nova-neon">SERVIÇOS</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">NOSSOS <span class="text-nova-neon">SERVIÇOS</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">
                     A arquitetura digital que sua empresa precisa para dominar o mercado do futuro.
                 </p>
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-                    <!-- Serviço 1: Web Design Futurista -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll">
                         <i data-lucide="monitor" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Web Design Futurista</h3>
                         <p class="text-gray-400">Criação de websites, landing pages e e-commerces ultra-modernos, focados em usabilidade e performance em todas as plataformas.</p>
                     </div>
-                    
-                    <!-- Serviço 2: Gestão Empresarial (NOVO) -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 100ms;">
                         <i data-lucide="briefcase" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Gestão Empresarial</h3>
                         <p class="text-gray-400">Consultoria estratégica e implementação de sistemas para otimização de processos, melhoria de performance e planejamento de crescimento.</p>
                     </div>
-                    
-                    <!-- Serviço 3: Branding e Identidade Visual -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 200ms;">
                         <i data-lucide="palette" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Branding e Identidade Visual</h3>
                         <p class="text-gray-400">Construção de marcas poderosas e identidades visuais que comunicam inovação e exclusividade em qualquer meio.</p>
                     </div>
-                    <!-- Serviço 4: Marketing Digital Estratégico -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 300ms;">
                         <i data-lucide="trending-up" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Marketing Digital Estratégico</h3>
                         <p class="text-gray-400">SEO, campanhas de tráfego pago (Ads) e estratégias de conteúdo para garantir visibilidade e conversão em alta performance.</p>
                     </div>
-                    <!-- Serviço 5: Consultoria de Inovação -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 400ms;">
                         <i data-lucide="lightbulb" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Consultoria de Inovação</h3>
                         <p class="text-gray-400">Análise, planejamento e implementação de tecnologias emergentes (IA, Blockchain) para manter sua empresa à frente da concorrência.</p>
                     </div>
-                    <!-- Serviço 6: Produção de Vídeo e Motion -->
-                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 500ms;">
                         <i data-lucide="video" class="w-8 h-8 text-nova-neon mb-3"></i>
                         <h3 class="text-xl font-bold text-white mb-2">Produção de Vídeo e Motion</h3>
                         <p class="text-gray-400">Criação de vídeos institucionais, animadas e motion graphics com acabamento cinematográfico e visual futurista.</p>
@@ -439,15 +425,12 @@
         <!-- Feedbacks Section -->
         <section id="feedbacks" class="py-20 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto text-center">
-                <h2 class="text-4xl font-bold mb-4 text-white">O QUE DIZEM NOSSOS <span class="text-nova-neon">CLIENTES</span></h2>
-                <div class="section-separator"></div>
-                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">O QUE DIZEM NOSSOS <span class="text-nova-neon">CLIENTES</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12 animate-on-scroll">
                     Nossos parceiros e a prova do nosso impacto no mercado.
                 </p>
-
-                <!-- Área de Feedbacks Dinâmicos (Carregados pelo JS/Firestore) -->
                 <div id="feedbacks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Itens de feedback serão injetados aqui -->
                     <p class="text-nova-neon text-center col-span-1 md:col-span-3">Carregando depoimentos em tempo real...</p>
                 </div>
             </div>
@@ -456,16 +439,12 @@
         <!-- Contato Section -->
         <section id="contato" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
             <div class="max-w-7xl mx-auto">
-                <h2 class="text-4xl font-bold mb-4 text-center text-white">COMECE SEU <span class="text-nova-neon">PROJETO</span></h2>
-                <div class="section-separator"></div>
-
+                <h2 class="text-4xl font-bold mb-4 text-center text-white animate-on-scroll">COMECE SEU <span class="text-nova-neon">PROJETO</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
                 <div class="grid lg:grid-cols-2 gap-12 mt-12">
-                    <!-- Formulário de Contato -->
-                    <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-2xl">
+                    <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-2xl animate-on-scroll">
                         <h3 class="text-2xl font-semibold text-white mb-6">Fale com um Especialista</h3>
-                        
                         <form onsubmit="window.handleContactSubmit(event)" class="space-y-4">
-                            <!-- Removida a nota de redirecionamento para o WhatsApp -->
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-300">Nome Completo</label>
                                 <input type="text" id="name" name="name" required class="mt-1 block w-full bg-gray-800 border border-nova-dark/50 text-white rounded-lg p-3 focus:ring-nova-neon focus:border-nova-neon transition duration-200">
@@ -484,33 +463,23 @@
                             </div>
                             <div id="form-status" class="text-sm font-semibold pt-2"></div>
                             <button type="submit" class="w-full py-3 bg-nova-neon text-white font-bold rounded-lg hover:bg-nova-dark transition duration-300 neon-glow">
-                                <!-- Botão restaurado para a aparência original -->
                                 Enviar Proposta
                             </button>
                         </form>
                     </div>
-
-                    <!-- Informações e Mapa -->
-                    <div class="space-y-8">
-                        <!-- Contatos Diretos -->
+                    <div class="space-y-8 animate-on-scroll" style="transition-delay: 150ms;">
                         <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl space-y-6">
                             <h3 class="text-2xl font-semibold text-white mb-4">Conexão Imediata</h3>
-                            
-                            <!-- WhatsApp na seção de Contato - ÍCONE AGORA É 'MESSAGE-CIRCLE' -->
                             <a href="https://wa.me/message/OXVXX2GXIAX6H1" target="_blank" class="flex items-center space-x-4 p-3 rounded-lg bg-green-600 hover:bg-green-700 transition duration-300 text-white font-bold">
                                 <i data-lucide="message-circle" class="w-6 h-6 fill-white"></i>
                                 <span>WhatsApp: Acessar Chat Direto (Início Rápido)</span>
                             </a>
-                            
-                            <!-- Email -->
                             <div class="flex items-center space-x-4">
                                 <i data-lucide="mail" class="w-6 h-6 text-nova-neon"></i>
                                 <a href="mailto:agencynovan@gmail.com" class="text-gray-300 hover:text-nova-neon transition duration-300">
                                     Email: agencynovan@gmail.com
                                 </a>
                             </div>
-
-                            <!-- Redes Sociais -->
                             <div class="flex items-center space-x-6 pt-4">
                                 <span class="text-gray-300">Nossa Rede:</span>
                                 <a href="https://www.instagram.com/novanagency_/" target="_blank" class="text-gray-400 hover:text-nova-neon transition duration-300">
@@ -518,12 +487,9 @@
                                 </a>
                             </div>
                         </div>
-
-                        <!-- Mapa de Localização -->
                         <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl">
                             <h3 class="text-2xl font-semibold text-white mb-4">Nosso Setor Central</h3>
                             <div class="w-full h-64 rounded-lg overflow-hidden border border-nova-dark/50 shadow-inner map-container">
-                                <!-- Mapa Integrado do Google Maps -->
                                 <iframe 
                                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3688.580252549247!2d-46.5049768!3d-21.805119!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c9e816ae2f5fbd%3A0xf792a18d4bb904df!2sR.%20Veterana%2C%20225%20-%20Parque%20Pinheiros%2C%20Po%C3%A7os%20de%20Caldas%20-%20MG%2C%2037706-412!5e0!3m2!1spt-BR!2sbr!4v1717010400000!5m2!1spt-BR!2sbr" 
                                     width="100%" 
@@ -558,13 +524,11 @@
 
     <!-- Botões Flutuantes (Pop-up) de Contato -->
     <div class="fixed bottom-6 right-6 z-[1000] flex flex-col space-y-3">
-        <!-- WhatsApp Pop-up -->
         <a href="https://wa.me/message/OXVXX2GXIAX6H1" target="_blank" 
            class="w-14 h-14 bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105"
            title="Fale conosco pelo WhatsApp">
             <i data-lucide="message-circle" class="w-7 h-7"></i>
         </a>
-        <!-- Instagram Pop-up -->
         <a href="https://www.instagram.com/novanagency_/" target="_blank" 
            class="w-14 h-14 bg-pink-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-pink-700 transition duration-300 transform hover:scale-105"
            title="Siga-nos no Instagram">
@@ -573,27 +537,18 @@
     </div>
 
     <script>
-        // Inicializa os ícones do Lucide
         lucide.createIcons();
         
-        // --- Lógica de Navegação Mobile ---
         const menuButton = document.getElementById('menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
-
         window.toggleMenu = () => {
             mobileMenu.classList.toggle('hidden');
             const icon = menuButton.querySelector('i');
-            if (mobileMenu.classList.contains('hidden')) {
-                icon.setAttribute('data-lucide', 'menu');
-            } else {
-                icon.setAttribute('data-lucide', 'x');
-            }
-            lucide.createIcons(); // Re-render icon
+            icon.setAttribute('data-lucide', mobileMenu.classList.contains('hidden') ? 'menu' : 'x');
+            lucide.createIcons();
         }
-
         menuButton.addEventListener('click', window.toggleMenu);
 
-        // --- Lógica de scroll suave para links internos (melhora UX) ---
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -603,7 +558,24 @@
             });
         });
 
-        // --- Lógica de Animação de Scroll REMOVIDA ---
+        // --- Lógica de Animação de Scroll REATIVADA ---
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                } else {
+                    entry.target.classList.remove('is-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        window.observeNewElements = () => {
+            const animatedElements = document.querySelectorAll('.animate-on-scroll');
+            animatedElements.forEach(el => {
+                scrollObserver.observe(el);
+            });
+        };
+        window.observeNewElements();
 
         // --- Guia Administrativo (Informando a funcionalidade atual) ---
         console.log("--- GUIA ADMINISTRATIVO (Simulação Firestore) ---");
