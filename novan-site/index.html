@@ -176,43 +176,39 @@
         .futuristic-gradient { background: linear-gradient(135deg, #0d0d17 0%, #1a082a 50%, #0d0d17 100%); }
         .neon-glow { box-shadow: 0 0 8px #A73CFF, 0 0 15px #A73CFF, 0 0 25px #D8A0FF; }
         .neon-text-glow { 
-            text-shadow: 
-                0 0 2px #A73CFF,
-                0 0 5px rgba(216, 160, 255, 0.5);
+            text-shadow: 0 0 8px rgba(167, 60, 255, 0.6);
         }
         .section-separator { content: ''; display: block; width: 80px; height: 3px; background: linear-gradient(90deg, #A73CFF, #D8A0FF); margin: 2rem auto; border-radius: 9999px; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: #A73CFF; border-radius: 4px; }
         .map-container iframe { width: 100%; height: 100%; }
-        .chess-pattern {
+        
+        #home::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(167, 60, 255, 0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(167, 60, 255, 0.08) 1px, transparent 1px);
-            background-size: 100px 100px;
-            filter: blur(0.5px);
-            opacity: 0.8;
-            pointer-events: none;
-            z-index: 5;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1580541832626-2a7131ee809f?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3px);
+            z-index: 1;
         }
-        .chess-pieces-bg {
+
+        #home::after {
+            content: '';
             position: absolute;
-            inset: 0;
-            z-index: 6;
-            pointer-events: none;
-            overflow: hidden;
-            background: radial-gradient(circle, transparent 40%, #040106 70%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(110, 28, 179, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
+            z-index: 2;
         }
-        .chess-piece {
-            position: absolute;
-            opacity: 0.25;
-            filter: blur(4px);
-            color: #D8A0FF;
-        }
+
         .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
         .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
     </style>
@@ -244,44 +240,7 @@
     </header>
 
     <main>
-        <section id="home" class="min-h-[90vh] flex items-center py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-black">
-            <div class="chess-pattern"></div>
-
-            <!-- Peças de Xadrez Desfocadas -->
-            <div class="chess-pieces-bg">
-                <!-- Rei -->
-                <svg viewBox="0 0 45 45" class="chess-piece" style="width: 280px; top: 10%; right: 15%; transform: rotate(15deg);">
-                    <g fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22.5 7.5L22.5 9.5" />
-                        <path d="M20.5 8.5L24.5 8.5" />
-                        <path d="M22.5,11.5 C 25.5,11.5 25.5,14.5 22.5,14.5 C 19.5,14.5 19.5,11.5 22.5,11.5 Z" />
-                        <path d="M22.5 14.5L22.5 16.5" />
-                        <path d="M22.5 16.5C22.5 16.5 27.5 21.5 27.5 26.5C27.5 31.5 24 33 22.5 33C21 33 17.5 31.5 17.5 26.5C17.5 21.5 22.5 16.5 22.5 16.5Z" />
-                        <path d="M17.5 26.5L27.5 26.5" />
-                        <path d="M17.5 29.5L27.5 29.5" />
-                        <path d="M14.5 33.5L30.5 33.5" />
-                        <path d="M14.5 36.5L30.5 36.5" />
-                        <path d="M11.5 39.5L33.5 39.5" />
-                    </g>
-                </svg>
-                <!-- Dama -->
-                <svg viewBox="0 0 45 45" class="chess-piece" style="width: 260px; top: 25%; left: 10%; transform: rotate(-10deg);">
-                    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8.5 12.5C8.5 12.5 12 6.5 22.5 6.5C33 6.5 36.5 12.5 36.5 12.5C36.5 12.5 33 18.5 22.5 18.5C12 18.5 8.5 12.5 8.5 12.5Z" />
-                        <path d="M22.5,18.5 C 22.5,18.5 27.5,23.5 27.5,28.5 C 27.5,33.5 24,35 22.5,35 C 21,35 17.5,33.5 17.5,28.5 C 17.5,23.5 22.5,18.5 22.5,18.5 Z" />
-                        <path d="M17.5 28.5L27.5 28.5" />
-                        <path d="M17.5 31.5L27.5 31.5" />
-                        <path d="M14.5 35.5L30.5 35.5" />
-                        <path d="M11.5 39.5L33.5 39.5" />
-                        <circle cx="6" cy="10" r="1.5" fill="currentColor" />
-                        <circle cx="14" cy="6" r="1.5" fill="currentColor" />
-                        <circle cx="22.5" cy="4.5" r="1.5" fill="currentColor" />
-                        <circle cx="31" cy="6" r="1.5" fill="currentColor" />
-                        <circle cx="39" cy="10" r="1.5" fill="currentColor" />
-                    </g>
-                </svg>
-            </div>
-            
+        <section id="home" class="min-h-[90vh] flex items-center py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <h1 class="text-5xl sm:text-7xl lg:text-8xl font-black mb-4 text-white leading-tight">
                     <span class="text-nova-neon neon-text-glow">INOVAÇÃO</span>
@@ -350,7 +309,7 @@
                 <div class="section-separator animate-on-scroll"></div>
                 <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12 animate-on-scroll">Nossos parceiros e a prova do nosso impacto no mercado.</p>
                 
-                <!-- CONTEÚDO DE FALLBACK DOS DEPOIMENTOS - SEMPRE VISÍVEL ATÉ SER SUBSTITUÍDO PELO FIREBASE -->
+                <!-- CONTEÚDO DE FALLBACK DOS DEPOIMENTOS - SEMPRE VISÍVEL ATÉ SER SUBSTITUTÍDO PELO FIREBASE -->
                 <div id="feedbacks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll">
                         <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
