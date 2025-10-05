@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novan Agência | Inovação Digital e Design Futurista</title>
+    <title>Novan Agency | Inovação Digital e Design Futurista</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -85,12 +85,12 @@
                     const snapshot = await getDocs(query(feedbacksRef));
                     if (snapshot.empty) {
                         const mockFeedbacks = [
-                            { author: "Lucas M., empresário.", text: "A Novan Agência transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
-                            { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agência trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
+                            { author: "Lucas M., empresário.", text: "A Novan Agency transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
+                            { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agency trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
                             { author: "João P., empreendedor digital.", text: "Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou.", rating: 5, date: serverTimestamp() },
                             { author: "Mariana L., CEO.", text: "O atendimento da Novan é impecável. Sempre atentos às nossas necessidades e com ideias criativas para nosso crescimento.", rating: 5, date: serverTimestamp() },
-                            { author: "Rafael T., dono de e-commerce.", text: "Serviço impecável! A Novan Agência fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!", rating: 5, date: serverTimestamp() },
-                            { author: "Camila R., influenciadora digital.", text: "Criatividade, estratégia e resultados. É isso que encontramos na Novan Agência. Recomendo sem dúvidas!", rating: 5, date: serverTimestamp() }
+                            { author: "Rafael T., dono de e-commerce.", text: "Serviço impecável! A Novan Agency fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!", rating: 5, date: serverTimestamp() },
+                            { author: "Camila R., influenciadora digital.", text: "Criatividade, estratégia e resultados. É isso que encontramos na Novan Agency. Recomendo sem dúvidas!", rating: 5, date: serverTimestamp() }
                         ];
                         await Promise.all(mockFeedbacks.map(data => addDoc(feedbacksRef, data)));
                     }
@@ -114,7 +114,9 @@
                         const feedbackElement = `
                             <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: ${index * 100}ms;">
                                 <div class="flex items-center mb-3">${ratingHtml}</div>
-                                <p class="text-lg italic text-gray-200 mb-4">"${f.text}"</p>
+                                <div class="text-lg italic text-gray-200 mb-4 min-h-24">
+                                    <p class="testimonial-text">"${f.text}"</p>
+                                </div>
                                 <p class="font-bold text-nova-neon">${f.author}</p>
                             </div>`;
                         feedbacksList.innerHTML += feedbackElement;
@@ -213,14 +215,8 @@
         .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .animated-headline span {
@@ -228,7 +224,6 @@
             opacity: 0;
             animation: fadeInUp 0.5s forwards;
         }
-
     </style>
 </head>
 <body class="futuristic-gradient">
@@ -237,7 +232,7 @@
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
             <a href="#home" class="flex items-center space-x-1 text-3xl font-extrabold text-nova-neon leading-none">
                 <span class="neon-text-glow">NOVAN</span>
-                <span class="text-gray-100 font-light text-2xl">AGÊNCIA</span>
+                <span class="text-gray-100 font-light text-2xl">AGENCY</span>
             </a>
             <div class="hidden md:flex space-x-8">
                 <a href="#home" class="text-gray-300 hover:text-nova-neon transition duration-300">Início</a>
@@ -273,7 +268,7 @@
                     </span>
                 </h1>
                 <p class="text-xl sm:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto font-semibold">
-                    A Novan Agência projeta o futuro da sua marca com design, tecnologia e estratégia sem limites.
+                    A Novan Agency projeta o futuro da sua marca com design, tecnologia e estratégia sem limites.
                 </p>
                 <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
                     <a href="#servicos" class="bg-nova-neon/70 backdrop-blur-md border border-nova-neon/80 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-nova-neon transition duration-300 transform hover:scale-105">
@@ -338,33 +333,18 @@
                 <div id="feedbacks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll">
                         <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"A Novan Agência transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!"</p>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"A Novan Agency transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!"</p></div>
                         <p class="font-bold text-nova-neon">Lucas M., empresário.</p>
                     </div>
                     <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 100ms;">
                         <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"Equipe extremamente dedicada e criativa. A Novan Agência trouxe soluções inovadoras para nosso marketing. Resultado excelente!"</p>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"Equipe extremamente dedicada e criativa. A Novan Agency trouxe soluções inovadoras para nosso marketing. Resultado excelente!"</p></div>
                         <p class="font-bold text-nova-neon">Ana S., gerente de marketing.</p>
                     </div>
                     <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 200ms;">
                         <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou."</p>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou."</p></div>
                         <p class="font-bold text-nova-neon">João P., empreendedor digital.</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 300ms;">
-                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"O atendimento da Novan é impecável. Sempre atentos às nossas necessidades e com ideias criativas para nosso crescimento."</p>
-                        <p class="font-bold text-nova-neon">Mariana L., CEO.</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 400ms;">
-                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"Serviço impecável! A Novan Agência fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!"</p>
-                        <p class="font-bold text-nova-neon">Rafael T., dono de e-commerce.</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 500ms;">
-                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
-                        <p class="text-lg italic text-gray-200 mb-4">"Criatividade, estratégia e resultados. É isso que encontramos na Novan Agência. Recomendo sem dúvidas!"</p>
-                        <p class="font-bold text-nova-neon">Camila R., influenciadora digital.</p>
                     </div>
                 </div>
             </div>
@@ -393,28 +373,28 @@
                             <div class="flex items-center space-x-4"><i data-lucide="mail" class="w-6 h-6 text-nova-neon"></i><a href="mailto:agencynovan@gmail.com" class="text-gray-300 hover:text-nova-neon transition duration-300">Email: agencynovan@gmail.com</a></div>
                             <div class="flex items-center space-x-6 pt-4"><span class="text-gray-300">Nossa Rede:</span><a href="https://www.instagram.com/novanagency_/" target="_blank" class="text-gray-400 hover:text-nova-neon transition duration-300"><i data-lucide="instagram" class="w-6 h-6"></i></a></div>
                         </div>
-                        <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl">
+                        <div id="results-section" class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl">
                             <h3 class="text-2xl font-semibold text-white mb-2">Nossos Resultados</h3>
                             <p class="text-gray-400 mb-6">Crescimento constante, com dados que falam por si.</p>
                             <div class="space-y-5">
-                                <div class="flex items-center">
+                                <div class="flex items-center animate-on-scroll">
                                     <i data-lucide="package-check" class="w-10 h-10 text-nova-neon mr-4"></i>
                                     <div>
-                                        <p class="text-3xl font-bold text-white">+120</p>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="120">0</span></p>
                                         <p class="text-gray-400">projetos entregues</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center">
+                                <div class="flex items-center animate-on-scroll" style="animation-delay: 100ms">
                                     <i data-lucide="smile" class="w-10 h-10 text-nova-neon mr-4"></i>
                                     <div>
-                                        <p class="text-3xl font-bold text-white">+95%</p>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="95">0</span>%</p>
                                         <p class="text-gray-400">de satisfação</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center">
+                                <div class="flex items-center animate-on-scroll" style="animation-delay: 200ms">
                                     <i data-lucide="users" class="w-10 h-10 text-nova-neon mr-4"></i>
                                     <div>
-                                        <p class="text-3xl font-bold text-white">+300</p>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="300">0</span></p>
                                         <p class="text-gray-400">leads gerados</p>
                                     </div>
                                 </div>
@@ -429,7 +409,7 @@
     <footer class="bg-black/70 py-8 px-4 sm:px-6 lg:px-8 border-t border-nova-dark/50">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
             <div class="mb-4 md:mb-0">
-                <p class="text-gray-400">&copy; 2025 Novan Agência. Todos os direitos reservados. Design Futurista.</p>
+                <p class="text-gray-400">&copy; 2025 Novan Agency. Todos os direitos reservados. Design Futurista.</p>
                 <p class="text-xs text-gray-600 mt-1">Desenvolvido com tecnologia de ponta e paixão por inovação.</p>
             </div>
             <div class="flex space-x-6 text-gray-400">
@@ -442,6 +422,15 @@
     <div class="fixed bottom-6 right-6 z-[1000] flex flex-col space-y-3">
         <a href="https://wa.me/message/OXVXX2GXIAX6H1" target="_blank" class="w-14 h-14 bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105" title="Fale conosco pelo WhatsApp"><i data-lucide="message-circle" class="w-7 h-7"></i></a>
         <a href="https://www.instagram.com/novanagency_/" target="_blank" class="w-14 h-14 bg-pink-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-pink-700 transition duration-300 transform hover:scale-105" title="Siga-nos no Instagram"><i data-lucide="instagram" class="w-6 h-6"></i></a>
+    </div>
+
+    <div id="visitor-counter" class="fixed bottom-6 left-6 z-[1000] flex items-center space-x-2 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-full border border-white/20 text-sm">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        <span id="visitor-count-number" class="text-white font-medium">0</span>
+        <span class="text-gray-400">online</span>
     </div>
 
     <script>
@@ -464,23 +453,110 @@
             });
         });
 
+        const typingIntervals = new Map();
+
         const scrollObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
+                // Animação de entrada geral
+                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                } else {
+                 } else {
                     entry.target.classList.remove('is-visible');
+                 }
+                
+                // Animação de digitação para depoimentos
+                const textElement = entry.target.querySelector('.testimonial-text');
+                if (textElement) {
+                    if (entry.isIntersecting) {
+                        if (!textElement.dataset.typed) {
+                            textElement.dataset.typed = 'true';
+                            const originalText = textElement.getAttribute('data-original-text');
+                            textElement.textContent = '';
+                            let i = 0;
+                            const typingSpeed = 35; // Velocidade ajustada
+
+                            const typer = setInterval(() => {
+                                if (i < originalText.length) {
+                                    textElement.textContent += originalText.charAt(i);
+                                    i++;
+                                } else {
+                                    clearInterval(typer);
+                                    typingIntervals.delete(textElement);
+                                }
+                            }, typingSpeed);
+                            typingIntervals.set(textElement, typer);
+                        }
+                    } else {
+                        if (typingIntervals.has(textElement)) {
+                            clearInterval(typingIntervals.get(textElement));
+                            typingIntervals.delete(textElement);
+                        }
+                        delete textElement.dataset.typed;
+                        if(textElement.hasAttribute('data-original-text')) {
+                           textElement.textContent = ''; 
+                        }
+                    }
+                }
+
+                // Animação de contagem para resultados
+                const counters = entry.target.querySelectorAll('[data-target]');
+                if (entry.isIntersecting && counters.length > 0) {
+                    counters.forEach(counter => {
+                        if (counter.dataset.counted) return; 
+                        counter.dataset.counted = 'true';
+
+                        const target = +counter.dataset.target;
+                        let current = 0;
+                        const duration = 2000;
+                        const incrementTime = 20; 
+                        const step = (target / duration) * incrementTime;
+                        
+                        const timer = setInterval(() => {
+                            current += step;
+                            if (current >= target) {
+                                clearInterval(timer);
+                                counter.innerText = target;
+                            } else {
+                                counter.innerText = Math.ceil(current);
+                            }
+                        }, incrementTime);
+                    });
                 }
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.8 });
 
         window.observeNewElements = () => {
             document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                const textElement = el.querySelector('.testimonial-text');
+                if (textElement && !textElement.hasAttribute('data-original-text')) {
+                    textElement.setAttribute('data-original-text', textElement.textContent);
+                    textElement.textContent = '';
+                }
                 scrollObserver.observe(el);
             });
         };
-        // Garante que os elementos estáticos e os dinâmicos (se carregados) sejam observados
+        
         window.observeNewElements();
+
+        // --- CONTADOR DE VISITANTES FICTÍCIO ---
+        const visitorCountElement = document.getElementById('visitor-count-number');
+        let currentVisitors = Math.floor(Math.random() * (12 - 5 + 1)) + 5;
+        visitorCountElement.textContent = currentVisitors;
+
+        function updateVisitorCount() {
+            const change = Math.random() > 0.5 ? 1 : -1;
+            let newVisitors = currentVisitors + change;
+            
+            if (newVisitors > 14) newVisitors = 13;
+            if (newVisitors < 2) newVisitors = 3;
+
+            currentVisitors = newVisitors;
+            visitorCountElement.textContent = currentVisitors;
+
+            const randomInterval = Math.random() * 3000 + 2000; // entre 2s e 5s
+            setTimeout(updateVisitorCount, randomInterval);
+        }
+        setTimeout(updateVisitorCount, 2500); // Inicia a oscilação
     </script>
 </body>
 </html>
