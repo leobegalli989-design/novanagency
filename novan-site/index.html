@@ -144,10 +144,10 @@
             statusDiv.className = 'text-sm font-semibold pt-2 text-nova-neon';
 
             const formData = {
-                name: form.name.value,
-                email: form.email.value,
-                phone: form.phone.value,
-                message: form.message.value,
+                nome: form.name.value || "",
+                email: form.email.value || "",
+                telefone: form.phone.value || "",
+                mensagem: form.message.value || "",
             };
 
             try {
@@ -160,9 +160,11 @@
                 });
 
                 if (response.ok) {
-                    statusDiv.textContent = 'Mensagem enviada com sucesso! Em breve entraremos em contato.';
-                    statusDiv.className = 'text-sm font-semibold pt-2 text-green-400';
+                    statusDiv.textContent = '';
                     form.reset();
+                    const modal = document.getElementById('success-modal');
+                    modal.classList.remove('hidden');
+                    lucide.createIcons();
                 } else {
                     throw new Error('Falha no envio para o servidor.');
                 }
@@ -435,6 +437,16 @@
         <span class="text-gray-400">online</span>
     </div>
 
+    <!-- Modal de Sucesso -->
+    <div id="success-modal" class="fixed inset-0 z-[1001] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-gray-900/80 border border-nova-neon/50 p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 transform transition-all animate-on-scroll">
+            <i data-lucide="check-circle" class="w-16 h-16 text-green-400 mx-auto mb-4"></i>
+            <h3 class="text-2xl font-bold text-white mb-2">Enviado com Sucesso!</h3>
+            <p class="text-gray-300 mb-6">Sua mensagem foi enviada. Em breve, nossa equipe entrará em contato.</p>
+            <button id="close-modal-btn" class="bg-nova-neon text-white font-bold py-2 px-6 rounded-full hover:bg-nova-dark transition duration-300">Fechar</button>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
         
@@ -456,6 +468,21 @@
         });
 
         const typingIntervals = new Map();
+        
+        const successModal = document.getElementById('success-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalContent = successModal.querySelector('div');
+
+        closeModalBtn.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) {
+                successModal.classList.add('hidden');
+            }
+        });
+
 
         const scrollObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
