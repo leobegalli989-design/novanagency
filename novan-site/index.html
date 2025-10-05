@@ -138,34 +138,36 @@
             event.preventDefault();
             const form = event.target;
             const statusDiv = document.getElementById('form-status');
+            const webhookUrl = 'https://hook.us2.make.com/j73nxsym9v8bsmz73yfwmab3q7qg58xs';
             
             statusDiv.textContent = 'Enviando...';
             statusDiv.className = 'text-sm font-semibold pt-2 text-nova-neon';
 
-            if (!db || !userId) {
-                statusDiv.textContent = 'Erro de conexão. Tente novamente mais tarde.';
-                statusDiv.className = 'text-sm font-semibold pt-2 text-red-400';
-                return;
-            }
+            const formData = {
+                name: form.name.value,
+                email: form.email.value,
+                phone: form.phone.value,
+                message: form.message.value,
+            };
 
             try {
-                const leadData = {
-                    name: form.name.value,
-                    email: form.email.value,
-                    phone: form.phone.value,
-                    message: form.message.value,
-                    timestamp: serverTimestamp(),
-                    captured_by_user_id: userId 
-                };
-                
-                const leadsRef = collection(db, `artifacts/${appId}/users/${userId}/novan_leads`);
-                await addDoc(leadsRef, leadData);
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
 
-                statusDiv.textContent = 'Mensagem enviada com sucesso! Em breve entraremos em contato.';
-                statusDiv.className = 'text-sm font-semibold pt-2 text-green-400';
-                form.reset();
-            } catch (e) {
-                console.error("Erro ao salvar lead:", e);
+                if (response.ok) {
+                    statusDiv.textContent = 'Mensagem enviada com sucesso! Em breve entraremos em contato.';
+                    statusDiv.className = 'text-sm font-semibold pt-2 text-green-400';
+                    form.reset();
+                } else {
+                    throw new Error('Falha no envio para o servidor.');
+                }
+            } catch (error) {
+                console.error("Erro ao enviar para o webhook:", error);
                 statusDiv.textContent = 'Erro ao enviar. Por favor, tente novamente.';
                 statusDiv.className = 'text-sm font-semibold pt-2 text-red-400';
             }
@@ -394,7 +396,7 @@
                                 <div class="flex items-center animate-on-scroll" style="animation-delay: 200ms">
                                     <i data-lucide="users" class="w-10 h-10 text-nova-neon mr-4"></i>
                                     <div>
-                                        <p class="text-3xl font-bold text-white">+<span data-target="300">0</span></p>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="12354">0</span></p>
                                         <p class="text-gray-400">leads gerados</p>
                                     </div>
                                 </div>
