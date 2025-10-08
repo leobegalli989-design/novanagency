@@ -3,796 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oficina Felipe Santos | Qualidade e confiança em cada reparo</title>
-    <!-- Meta Tags para SEO e Redes Sociais -->
-    <meta name="description" content="Oficina Felipe Santos: Qualidade e confiança em serviços automotivos em Poços de Caldas. Agende troca de óleo, revisão e mecânica completa.">
-    <meta property="og:title" content="Oficina Felipe Santos">
-    <meta property="og:description" content="Qualidade e confiança em cada reparo automotivo.">
-    <meta property="og:type" content="website">
-
-    <!-- Carregamento do Tailwind CSS e Google Fonts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Novan Agency | Inovação Digital e Design Futurista</title>
     
-    <!-- Configuração do Tailwind com Cores e Fontes Personalizadas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#0A1F44', // Azul principal da marca
-                        'accent-white': '#FFFFFF',
-                        'detail-black': '#000000',
-                        'danger-red': '#FF4500', // Nova cor de destaque (Vermelho/Laranja)
-                    },
-                    fontFamily: {
-                        // Orbitron para títulos e elementos futuristas
-                        futuristic: ['Orbitron', 'sans-serif'],
-                        // Inter para corpo de texto (legibilidade)
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                },
-            },
+          theme: {
+            extend: {
+              colors: {
+                'nova-neon': '#A73CFF',
+                'nova-dark': '#6a0dad',
+                'nova-glow': '#D8A0FF',
+              }
+            }
+          }
         }
     </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, onSnapshot, collection, query, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Estilos Personalizados e Animações (CSS) -->
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId;
+
+        // --- INICIALIZAÇÃO DO FIREBASE ---
+        const initFirebase = async () => {
+            // Se a configuração falhar, o site continua funcionando com os dados estáticos.
+            if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+                console.error("Configuração do Firebase não encontrada. O conteúdo dinâmico não será carregado, mas o site continuará funcional com o conteúdo estático.");
+                return;
+            }
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                
+                console.log("Firebase inicializado. User ID:", userId);
+                window.db = db;
+                window.auth = auth;
+                window.userId = userId;
+                window.appId = appId;
+
+                // Tenta carregar os depoimentos do Firestore para substituir os estáticos.
+                loadFeedbacksFromFirestore();
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase. O conteúdo estático será mantido.", error);
+            }
+        };
+
+        // --- CARREGAMENTO DOS DEPOIMENTOS DO FIRESTORE ---
+        const loadFeedbacksFromFirestore = async () => {
+            const feedbacksList = document.getElementById('feedbacks-list');
+            // Se o DB não estiver pronto ou o elemento não existir, não faz nada.
+            if (!db || !feedbacksList) {
+                console.error("Conexão com DB falhou ou elemento de lista não encontrado. Mantendo conteúdo estático.");
+                return;
+            }
+
+            try {
+                const feedbacksRef = collection(db, `artifacts/${appId}/public/data/novan_feedbacks`);
+                
+                // Adiciona dados de exemplo apenas se a coleção estiver vazia
+                const addMockDataIfNeeded = async () => {
+                    const snapshot = await getDocs(query(feedbacksRef));
+                    if (snapshot.empty) {
+                        const mockFeedbacks = [
+                            { author: "Lucas M., empresário.", text: "A Novan Agency transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!", rating: 5, date: serverTimestamp() },
+                            { author: "Ana S., gerente de marketing.", text: "Equipe extremamente dedicada e criativa. A Novan Agency trouxe soluções inovadoras para nosso marketing. Resultado excelente!", rating: 5, date: serverTimestamp() },
+                            { author: "João P., empreendedor digital.", text: "Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou.", rating: 5, date: serverTimestamp() },
+                            { author: "Mariana L., CEO.", text: "O atendimento da Novan é impecável. Sempre atentos às nossas necessidades e com ideias criativas para nosso crescimento.", rating: 5, date: serverTimestamp() },
+                            { author: "Rafael T., dono de e-commerce.", text: "Serviço impecável! A Novan Agency fez toda a diferença no nosso posicionamento online. Trabalho de alta qualidade!", rating: 5, date: serverTimestamp() },
+                            { author: "Camila R., influenciadora digital.", text: "Criatividade, estratégia e resultados. É isso que encontramos na Novan Agency. Recomendo sem dúvidas!", rating: 5, date: serverTimestamp() }
+                        ];
+                        await Promise.all(mockFeedbacks.map(data => addDoc(feedbacksRef, data)));
+                    }
+                };
+
+                await addMockDataIfNeeded(); 
+
+                // Listener em tempo real para atualizar os depoimentos
+                onSnapshot(feedbacksRef, (snapshot) => {
+                    if (snapshot.empty) {
+                        // Se por algum motivo a coleção ficar vazia, não faz nada para não apagar o fallback
+                        return;
+                    }
+                    
+                    feedbacksList.innerHTML = ''; // Limpa o conteúdo estático para inserir o dinâmico
+                    const feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    feedbacks.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+
+                    feedbacks.forEach((f, index) => {
+                        const ratingHtml = Array(f.rating || 5).fill('<i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i>').join('');
+                        const feedbackElement = `
+                            <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: ${index * 100}ms;">
+                                <div class="flex items-center mb-3">${ratingHtml}</div>
+                                <div class="text-lg italic text-gray-200 mb-4 min-h-24">
+                                    <p class="testimonial-text">"${f.text}"</p>
+                                </div>
+                                <p class="font-bold text-nova-neon">${f.author}</p>
+                            </div>`;
+                        feedbacksList.innerHTML += feedbackElement;
+                    });
+                    
+                    lucide.createIcons();
+                    if (window.observeNewElements) window.observeNewElements();
+                }, (error) => {
+                    console.error("Erro no listener do Firestore. O conteúdo estático será mantido.", error);
+                });
+
+            } catch(error) {
+                console.error("Erro ao carregar depoimentos do Firestore. O conteúdo estático será mantido.", error);
+            }
+        };
+
+        // --- SUBMISSÃO DO FORMULÁRIO DE CONTATO ---
+        window.handleContactSubmit = async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const statusDiv = document.getElementById('form-status');
+            const webhookUrl = 'https://hook.us2.make.com/j73nxsym9v8bsmz73yfwmab3q7qg58xs';
+            
+            statusDiv.textContent = 'Enviando...';
+            statusDiv.className = 'text-sm font-semibold pt-2 text-nova-neon';
+
+            const formData = {
+                nome: form.name.value || "",
+                email: form.email.value || "",
+                telefone: form.phone.value || "",
+                mensagem: form.message.value || "",
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (response.ok) {
+                    statusDiv.textContent = '';
+                    form.reset();
+                    const modal = document.getElementById('success-modal');
+                    modal.classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    throw new Error('Falha no envio para o servidor.');
+                }
+            } catch (error) {
+                console.error("Erro ao enviar para o webhook:", error);
+                statusDiv.textContent = 'Erro ao enviar. Por favor, tente novamente.';
+                statusDiv.className = 'text-sm font-semibold pt-2 text-red-400';
+            }
+        };
+
+        window.onload = initFirebase;
+    </script>
     <style>
-        /* Base e Scrollbar */
-        body {
-            background-color: #000000;
-            color: #FFFFFF;
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', sans-serif; background-color: #0d0d17; color: #e5e7eb; }
+        .futuristic-gradient { background: linear-gradient(135deg, #0d0d17 0%, #1a082a 50%, #0d0d17 100%); }
+        .neon-glow { box-shadow: 0 0 8px #A73CFF, 0 0 15px #A73CFF, 0 0 25px #D8A0FF; }
+        .neon-text-glow { 
+            text-shadow: 0 0 8px rgba(167, 60, 255, 0.6);
         }
-
-        /* Efeito de Gradiente sutil para seções */
-        .gradient-bg {
-            background: linear-gradient(180deg, rgba(10, 31, 68, 1) 0%, rgba(0, 0, 0, 1) 100%);
-        }
+        .section-separator { content: ''; display: block; width: 80px; height: 3px; background: linear-gradient(90deg, #A73CFF, #D8A0FF); margin: 2rem auto; border-radius: 9999px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #A73CFF; border-radius: 4px; }
+        .map-container iframe { width: 100%; height: 100%; }
         
-        /* Animação de Fade-In para o Scroll */
-        .fade-in-on-scroll {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        .fade-in-on-scroll.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Efeito Hover Futurista nos Botões */
-        .cta-button {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .cta-button:hover {
-            /* Ajustando o hover para dar um brilho vermelho/laranja */
-            box-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
-            transform: translateY(-2px);
-        }
-        .cta-button::after {
+        #home::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            transition: all 0.4s ease;
-        }
-        .cta-button:hover::after {
             left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1580541832626-2a7131ee809f?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3px);
+            z-index: 1;
         }
 
-        /* Animação Simples do Logo (CSS) */
-        @keyframes logoPulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 0.9;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 1;
-            }
-        }
-        .logo-pulse {
-            animation: logoPulse 4s infinite ease-in-out;
-        }
-
-        /* Animação de Rotação para a Engrenagem */
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        .gear-rotate {
-            animation: rotate 10s linear infinite; /* Rotação suave e infinita */
-        }
-        
-        /* NOVO: Animação para Ícones de Serviço no Hover */
-        .service-icon {
-            transition: all 0.3s ease-in-out;
-        }
-        .service-card:hover .service-icon {
-            transform: scale(1.1) rotate(5deg);
-            color: #FF4500; /* danger-red on hover */
-        }
-        .small-gear-rotate {
-            animation: rotate 5s linear infinite; /* Rotação mais rápida para elemento menor */
-        }
-
-
-        /* Estilo do Input */
-        .futuristic-input {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(10, 31, 68, 0.5);
-            color: #FFFFFF;
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-        .futuristic-input:focus {
-            outline: none;
-            border-color: #0A1F44;
-            background-color: rgba(10, 31, 68, 0.2);
-            box-shadow: 0 0 5px rgba(10, 31, 68, 0.5);
-        }
-        .futuristic-input::placeholder {
-            color: #9CA3AF;
-        }
-
-        /* Estilo para o Carrossel de Depoimentos - Transição Acelerada */
-        .testimonial-slide-item {
+        #home::after {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(110, 28, 179, 0.3) 0%, rgba(0, 0, 0, 0.8) 70%);
+            z-index: 2;
+        }
+
+        .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated-headline span {
+            display: inline-block;
             opacity: 0;
-            transition: opacity 0.3s ease-in-out; /* Transição mais rápida */
-        }
-        .testimonial-slide-item.active {
-            opacity: 1;
-            position: relative; /* Mantém a altura da div pai quando ativo */
-        }
-        
-        /* Estilo para aplicar Desfoque na Imagem de Fundo (Parallax) */
-        #parallax-bg {
-            /* CORRIGIDO COM URL FORNECIDA: Imagem de oficina moderna */
-            background-image: url('https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1650&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); 
-            filter: blur(4px); /* Aplica um desfoque suave na imagem */
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            transform: scale(1.05); /* Garante que o desfoque não crie bordas visíveis */
-        }
-
-        /* Estilo para o Hover da Navegação */
-        .nav-link:hover {
-            background-color: rgba(10, 31, 68, 0.3); /* primary-blue/30 */
-            border-radius: 8px;
-        }
-
-        /* NOVO: Estilo para o botão flutuante de WhatsApp com Imagem */
-        .whatsapp-button-img {
-            background-image: url('https://images.unsplash.com/photo-1636751364472-12bfad09b451?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-            background-size: cover;
-            background-position: center;
-            background-color: transparent !important; /* Remove o fundo verde padrão do Tailwind */
-            border: 3px solid #4CAF50; /* Borda verde suave */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            width: 56px; /* Tamanho fixo */
-            height: 56px; /* Tamanho fixo */
-        }
-        .whatsapp-button-img:hover {
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.8); /* Sombra verde */
-            transform: scale(1.1);
-        }
-        .whatsapp-button-img svg {
-            /* Esconde o ícone SVG interno, pois estamos usando imagem de fundo */
-            display: none;
+            animation: fadeInUp 0.5s forwards;
         }
     </style>
 </head>
-<body class="bg-detail-black">
+<body class="futuristic-gradient">
 
-    <!-- Navbar Sticky (Navegação) -->
-    <header id="header" class="sticky top-0 z-50 bg-primary-blue shadow-lg transition-all duration-300">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            
-            <!-- Logo Animada Atualizada -->
-            <a href="#home" class="text-2xl md:text-xl font-futuristic text-accent-white logo-pulse flex items-center tracking-wider font-bold">
-                <!-- Ícone de Engrenagem Rotacionando -->
-                <svg class="w-7 h-7 mr-2 fill-current gear-rotate text-danger-red" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm0-13a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1zm-.707 5.707l-2.5 2.5a1 1 0 001.414 1.414l2.5-2.5a1 1 0 00-1.414-1.414zM12 7a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1z" fill="#FF4500"/>
-                </svg>
-                OFICINA FELIPE SANTOS
+    <header class="sticky top-0 z-50 bg-black/70 backdrop-blur-md border-b border-nova-dark/50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <a href="#home" class="flex items-center space-x-1 text-3xl font-extrabold text-nova-neon leading-none">
+                <span class="neon-text-glow">NOVAN</span>
+                <span class="text-gray-100 font-light text-2xl">AGENCY</span>
             </a>
-
-            <!-- Menu Desktop (Fundo nos botões) -->
-            <nav class="hidden md:flex space-x-2 font-futuristic text-sm">
-                <a href="#home" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b-2 border-transparent hover:border-cyan-400">Home</a>
-                <a href="#sobre" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b-2 border-transparent hover:border-cyan-400">Sobre</a>
-                <a href="#servicos" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b-2 border-transparent hover:border-cyan-400">Serviços</a>
-                <a href="#depoimentos" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b-2 border-transparent hover:border-cyan-400">Depoimentos</a>
-                <a href="#contato" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b-2 border-transparent hover:border-cyan-400">Contato</a>
-            </nav>
-
-            <!-- Botão Menu Mobile -->
-            <button id="menu-toggle" class="md:hidden p-2 rounded-lg text-accent-white hover:bg-primary-blue/50 transition duration-300">
-                <!-- Ícone Hambúrguer (menu) -->
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-            </button>
-        </div>
-
-        <!-- Menu Mobile (oculto por padrão) -->
-        <div id="mobile-menu" class="hidden md:hidden bg-primary-blue/95 border-t border-detail-black/50">
-            <nav class="flex flex-col space-y-2 p-4 font-futuristic text-base">
-                <a href="#home" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b border-primary-blue/50">Home</a>
-                <a href="#sobre" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b border-primary-blue/50">Sobre</a>
-                <a href="#servicos" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b border-primary-blue/50">Serviços</a>
-                <a href="#depoimentos" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2 border-b border-primary-blue/50">Depoimentos</a>
-                <a href="#contato" class="nav-link text-accent-white hover:text-cyan-400 transition duration-300 p-2">Contato</a>
-            </nav>
+            <div class="hidden md:flex space-x-8">
+                <a href="#home" class="text-gray-300 hover:text-nova-neon transition duration-300">Início</a>
+                <a href="#sobre" class="text-gray-300 hover:text-nova-neon transition duration-300">Sobre</a>
+                <a href="#servicos" class="text-gray-300 hover:text-nova-neon transition duration-300">Serviços</a>
+                <a href="#feedbacks" class="text-gray-300 hover:text-nova-neon transition duration-300">Feedbacks</a>
+                <a href="#contato" class="py-1 px-4 rounded-full text-white bg-nova-neon hover:bg-nova-dark transition duration-300 neon-glow">Contato</a>
+            </div>
+            <button id="menu-button" class="md:hidden text-gray-300 focus:outline-none"><i data-lucide="menu" class="w-7 h-7"></i></button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-black/90 pt-2 pb-4 space-y-3 px-4 text-center">
+            <a href="#home" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Início</a>
+            <a href="#sobre" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Sobre</a>
+            <a href="#servicos" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Serviços</a>
+            <a href="#feedbacks" class="block text-gray-300 hover:text-nova-neon transition duration-300 py-2" onclick="toggleMenu()">Feedbacks</a>
+            <a href="#contato" class="block text-white bg-nova-neon hover:bg-nova-dark transition duration-300 py-2 rounded-lg mt-2" onclick="toggleMenu()">Contato</a>
         </div>
     </header>
 
     <main>
-        <!-- 1. Seção Home/Banner -->
-        <section id="home" class="relative h-screen flex items-center justify-center text-center overflow-hidden gradient-bg">
-            <!-- Imagem de Fundo (Oficina Moderna) e Efeito Parallax -->
-            <div id="parallax-bg" class="absolute inset-0 bg-cover bg-center transition-transform duration-100 ease-out">
-            </div>
-            
-            <!-- Overlay para contraste (80% de opacidade) -->
-            <div class="absolute inset-0 bg-detail-black/80"></div>
-
-            <div class="relative z-10 p-6 max-w-4xl fade-in-on-scroll">
-                <h1 class="text-5xl md:text-7xl font-futuristic font-extrabold text-accent-white mb-4 tracking-wider">
-                    OFICINA <span class="text-danger-red">FELIPE SANTOS</span>
+        <section id="home" class="min-h-[90vh] flex items-center py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto text-center relative z-10">
+                <h1 class="animated-headline text-5xl sm:text-7xl lg:text-8xl font-black mb-4 text-white leading-tight">
+                    <span class="text-nova-neon neon-text-glow">
+                        <span style="animation-delay: 0.1s">I</span><span style="animation-delay: 0.2s">N</span><span style="animation-delay: 0.3s">O</span><span style="animation-delay: 0.4s">V</span><span style="animation-delay: 0.5s">A</span><span style="animation-delay: 0.6s">Ç</span><span style="animation-delay: 0.7s">Ã</span><span style="animation-delay: 0.8s">O</span>
+                    </span>
+                    <span class="block">
+                        <span style="animation-delay: 1.0s">Q</span><span style="animation-delay: 1.1s">U</span><span style="animation-delay: 1.2s">E</span>
+                        <span style="animation-delay: 1.3s"> </span>
+                        <span style="animation-delay: 1.4s">T</span><span style="animation-delay: 1.5s">E</span>
+                        <span style="animation-delay: 1.6s"> </span>
+                        <span style="animation-delay: 1.7s">M</span><span style="animation-delay: 1.8s">O</span><span style="animation-delay: 1.9s">V</span><span style="animation-delay: 2.0s">E</span><span style="animation-delay: 2.1s">.</span>
+                    </span>
                 </h1>
-                <p class="text-xl md:text-2xl font-sans text-gray-300 mb-8">
-                    "Qualidade e confiança em cada reparo"
+                <p class="text-xl sm:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto font-semibold">
+                    A Novan Agency projeta o futuro da sua marca com design, tecnologia e estratégia sem limites.
                 </p>
-                <!-- CTA Principal -->
-                <a href="#contato" class="cta-button bg-danger-red text-accent-white font-futuristic uppercase px-8 py-3 rounded-xl inline-block text-lg font-bold shadow-2xl">
-                    Agende seu Serviço
-                </a>
-            </div>
-        </section>
-
-        <!-- 2. Seção Sobre Nós -->
-        <section id="sobre" class="py-20 md:py-32 bg-detail-black">
-            <div class="container mx-auto px-4 max-w-6xl">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
-                    
-                    <div class="fade-in-on-scroll delay-200">
-                        <h2 class="text-4xl md:text-5xl font-futuristic font-bold mb-6 border-b-4 border-primary-blue pb-2">
-                            Tecnologia e <span class="text-cyan-400">Excelência</span>
-                        </h2>
-                        <p class="text-gray-300 text-lg leading-relaxed">
-                            Fundada por Felipe Santos, a oficina nasceu da paixão por mecânica e do compromisso em oferecer serviços automotivos de excelência em Poços de Caldas. Com anos de experiência, construímos uma reputação baseada na **confiança, transparência e tecnologia**. Nosso objetivo é garantir que cada cliente saia com seu veículo em perfeito estado e com a certeza de um atendimento rápido, honesto e de alta qualidade.
-                        </p>
-                        <a href="#servicos" class="mt-8 cta-button bg-primary-blue text-accent-white font-sans px-6 py-3 rounded-lg inline-block hover:bg-primary-blue/80">
-                            Ver Nossos Serviços
-                        </a>
-                    </div>
-
-                    <!-- Bloco de Experiência e Visual (NOVO) -->
-                    <div class="fade-in-on-scroll delay-400 text-center">
-                        <!-- Bloco de Destaque da Experiência com Chaves Animadas (Alinhado) -->
-                        <div class="bg-danger-red/90 p-6 rounded-xl shadow-2xl mb-6 flex items-center justify-center space-x-3 max-w-sm mx-auto">
-                            <!-- Chave 1 Animada -->
-                            <svg class="w-8 h-8 fill-current small-gear-rotate text-accent-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20.7 7.7L16.3 3.3a1 1 0 00-1.4 0L3.7 14.9a1 1 0 000 1.4l4.4 4.4a1 1 0 001.4 0L20.7 9.1a1 1 0 000-1.4z"/>
-                                <path d="M15 9l-6 6"/>
-                            </svg>
-                            <span class="text-xl md:text-2xl font-futuristic font-bold text-accent-white tracking-wider">
-                                + DE 35 ANOS DE EXPERIÊNCIA
-                            </span>
-                             <!-- Chave 2 Animada (Espelhada) -->
-                            <svg class="w-8 h-8 fill-current small-gear-rotate text-accent-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1);">
-                                <path d="M20.7 7.7L16.3 3.3a1 1 0 00-1.4 0L3.7 14.9a1 1 0 000 1.4l4.4 4.4a1 1 0 001.4 0L20.7 9.1a1 1 0 000-1.4z"/>
-                                <path d="M15 9l-6 6"/>
-                            </svg>
-                        </div>
-                        
-                        <!-- Ícone de Avaliação/Qualidade (Substitui a imagem do carro) -->
-                        <div class="rounded-xl shadow-2xl transform hover:scale-[1.02] transition duration-500 mx-auto bg-primary-blue/80 p-8 border-4 border-cyan-400/50 max-w-sm">
-                            <p class="text-4xl md:text-5xl text-yellow-400 mb-4 font-extrabold font-futuristic">QUALIDADE</p>
-                            <!-- SVG Temático de 5 Estrelas -->
-                            <svg class="w-full h-auto max-w-[250px] text-danger-red mx-auto fill-current transition duration-300 hover:text-yellow-400" 
-                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" 
-                                    stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" fill="currentColor"/>
-                            </svg>
-                            <p class="text-lg mt-4 text-cyan-400 font-futuristic">Nossa nota máxima em Satisfação e Serviço.</p>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. Seção Serviços -->
-        <section id="servicos" class="py-20 md:py-32 gradient-bg">
-            <div class="container mx-auto px-4 max-w-6xl">
-                <h2 class="text-4xl md:text-5xl font-futuristic font-bold text-center mb-16 fade-in-on-scroll">
-                    Nossos <span class="text-danger-red">Serviços</span>
-                </h2>
-
-                <div class="grid md:grid-cols-3 gap-8">
-                    
-                    <!-- Serviço 1: Troca de Óleo -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v2m0 16v2m-4-8h8m-8 0h-2m10 0h2m-4-8h-2m6 0h2m-4 10h-2m6 0h2m-1-10v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4a2 2 0 012-2h2a2 2 0 012 2z"></path></svg>
-                        <h3 class="text-2xl font-futuristic font-bold mb-3 text-accent-white">Troca de Óleo</h3>
-                        <p class="text-gray-400">Utilizamos óleos sintéticos de alta performance e filtros com tecnologia de ponta para o melhor desempenho do seu motor.</p>
-                    </div>
-
-                    <!-- Serviço 2: Alinhamento e Balanceamento -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll delay-100">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10H4M14 10a2 2 0 012 2v4a2 2 0 007 0V6a2 2 0 00-7 0m-8 8v4a2 2 0 002 2h4a2 2 0 002-2v-4a2 2 0 00-2-2H8a2 2 0 00-2 2z"></path></svg>
-                        <h3 class="text-2xl font-futuristic font-bold mb-3 text-accent-white">Alinhamento e Balanceamento</h3>
-                        <p class="text-gray-400">Equipamentos a laser de última geração garantindo precisão milimétrica e segurança na direção.</p>
-                    </div>
-
-                    <!-- Serviço 3: Revisão -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll delay-200">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                        <h3 class="text-2xl font-futuristic font-bold mb-3 text-accent-white">Revisão Preventiva</h3>
-                        <p class="text-gray-400">Checklist completo usando diagnóstico digital para identificar e prevenir falhas futuras no seu veículo.</p>
-                    </div>
-
-                    <!-- Serviço 4: Mecânica Completa -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll delay-300">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <h3 class="text-2xl font-futuristic font-bold mb-3 text-accent-white">Mecânica Completa</h3>
-                        <p class="text-gray-400">Reparos em motor, câmbio e diferenciais, com peças originais e garantia de serviço.</p>
-                    </div>
-                    
-                    <!-- Serviço 5: Injeção Eletrônica -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll delay-400">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-3.25-3M3 7h18M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10M7 7h10M7 7a1 1 0 011-1h6a1 1 0 011 1"></path></svg>
-                        <h3 class="2xl font-futuristic font-bold mb-3 text-accent-white">Injeção Eletrônica</h3>
-                        <p class="text-gray-400">Diagnóstico preciso de falhas no sistema de injeção utilizando scanners avançados e específicos.</p>
-                    </div>
-                    
-                    <!-- Serviço 6: Freios e Suspensão -->
-                    <div class="service-card bg-primary-blue p-8 rounded-xl shadow-lg hover:shadow-cyan-400/30 transition duration-300 transform hover:-translate-y-1 fade-in-on-scroll delay-500">
-                        <svg class="w-12 h-12 text-cyan-400 mb-4 service-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.636 2.364a9 9 0 11-12.728 0m12.728 0L20 10m-3.364-3.364a9 9 0 00-12.728 0m12.728 0L16 4"></path></svg>
-                        <h3 class="text-2xl font-futuristic font-bold mb-3 text-accent-white">Freios e Suspensão</h3>
-                        <p class="text-gray-400">Manutenção e reparo completo do sistema de segurança, utilizando peças de primeira linha e alinhamento.</p>
-                    </div>
-                </div>
-
-                <!-- CTA Secundário -->
-                <div class="text-center mt-16 fade-in-on-scroll delay-600">
-                    <a href="#contato" class="cta-button bg-danger-red text-accent-white font-futuristic uppercase px-8 py-3 rounded-xl inline-block text-lg font-bold shadow-2xl">
-                        Solicitar Orçamento Agora
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <a href="#servicos" class="bg-nova-neon/70 backdrop-blur-md border border-nova-neon/80 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-nova-neon transition duration-300 transform hover:scale-105">
+                        Ver Portfólio
+                    </a>
+                    <a href="#contato" class="bg-black/70 backdrop-blur-md border border-white/30 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-black hover:border-white transition duration-300 transform hover:scale-105">
+                        Fale Conosco
                     </a>
                 </div>
-
             </div>
         </section>
 
-        <!-- 4. Seção Depoimentos (Carrossel com Autoplay) -->
-        <section id="depoimentos" class="py-20 md:py-32 bg-detail-black">
-            <div class="container mx-auto px-4 max-w-4xl">
-                <h2 class="text-4xl md:text-5xl font-futuristic font-bold text-center mb-16 fade-in-on-scroll">
-                    Confiança <span class="text-danger-red">Comprovada</span>
-                </h2>
-
-                <!-- Container do Carrossel de Depoimentos -->
-                <div class="relative mx-auto max-w-xl fade-in-on-scroll delay-100">
-                    <!-- Área Visível do Slider. Altura fixa para evitar pulos no layout. -->
-                    <div id="testimonial-slider-container" class="relative min-h-[15rem] md:min-h-[12rem]">
-
-                        <!-- SLIDES INDIVIDUAIS -->
-                        
-                        <!-- Depoimento 1 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Serviço rápido e o diagnóstico mais preciso que já vi. O Felipe e sua equipe são transparentes e honestos."</p>
-                                <p class="mt-4 font-bold text-danger-red">- Carla R.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 2 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Atendimento impecável! Resolveram um problema complexo na injeção eletrônica que outras oficinas não conseguiram."</p>
-                                <p class="mt-4 font-bold text-danger-red">- João V.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 3 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Revisão preventiva de rotina feita com toda a tecnologia. Saí com o carro como novo e com total segurança."</p>
-                                <p class="mt-4 font-bold text-danger-red">- Renata S.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 4 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"O agendamento online é super fácil. Cheguei, fui atendido na hora e o preço foi justo. Recomendo muito!"</p>
-                                <p class="mt-4 font-bold text-danger-red">- Guilherme P.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 5 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Precisava de um alinhamento urgente e fui surpreendido pela qualidade do serviço e o profissionalismo."</p>
-                                <p class="mt-4 font-bold text-danger-red">- Lúcia M.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 6 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Melhor troca de óleo da cidade! Usam produtos de ponta. Meu carro agradece o cuidado extra que a Oficina Felipe Santos tem."</p>
-                                <p class="mt-4 font-bold text-danger-red">- André H.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 7 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"A transparência no orçamento foi o que mais me ganhou. Não fazem serviço sem antes explicar e pedir aprovação."</p>
-                                <p class="mt-4 font-bold text-danger-red">- Patrícia K.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Depoimento 8 -->
-                        <div class="testimonial-slide-item">
-                            <div class="bg-primary-blue/70 p-8 rounded-xl shadow-lg w-full">
-                                <div class="text-2xl text-yellow-400 mb-2">★★★★★</div>
-                                <p class="italic text-lg text-gray-300">"Tecnologia pura! Vê-se que os equipamentos são modernos. Confio 100% o meu carro nas mãos do Felipe."</p>
-                                <p class="mt-4 font-bold text-danger-red">- Roberto D.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- FIM DOS SLIDES INDIVIDUAIS -->
-
+        <section id="sobre" class="py-20 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">SOBRE A <span class="text-nova-neon">NOVAN</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">
+                    Nascemos para desafiar o status quo. Somos uma agência full-service com DNA focado em soluções que antecipam o amanhã.
+                </p>
+                <div class="grid md:grid-cols-3 gap-10 text-left">
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll">
+                        <i data-lucide="rocket" class="w-10 h-10 text-nova-neon mb-4"></i>
+                        <h3 class="text-2xl font-semibold text-white mb-3">Missão</h3>
+                        <p class="text-gray-300">Transformar visões em realidades digitais impactantes, impulsionando o crescimento sustentável de nossos clientes através da vanguarda tecnológica.</p>
                     </div>
-                    
-                    <!-- Botões de Navegação (Setas) -->
-                    <button id="prev-slide" class="absolute top-1/2 -left-12 transform -translate-y-1/2 p-3 bg-primary-blue/70 text-accent-white rounded-full shadow-lg hover:bg-primary-blue transition duration-300 hidden md:block" aria-label="Depoimento Anterior">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
-                    <button id="next-slide" class="absolute top-1/2 -right-12 transform -translate-y-1/2 p-3 bg-primary-blue/70 text-accent-white rounded-full shadow-lg hover:bg-primary-blue transition duration-300 hidden md:block" aria-label="Próximo Depoimento">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    
-                    <!-- Botões de navegação mobile/indicadores -->
-                    <div id="slide-indicators" class="flex justify-center space-x-2 mt-8">
-                        <!-- Indicadores Gerados por JS -->
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 150ms;">
+                        <i data-lucide="eye" class="w-10 h-10 text-nova-neon mb-4"></i>
+                        <h3 class="text-2xl font-semibold text-white mb-3">Visão</h3>
+                        <p class="text-gray-300">Ser a agência referência em inovação e design futurista no mercado global, redefinindo os padrões de excelência digital.</p>
                     </div>
-
-                    <div class="flex justify-between md:hidden mt-8">
-                         <button id="prev-slide-mobile" class="cta-button w-24 bg-primary-blue text-accent-white font-futuristic uppercase px-4 py-2 rounded-lg" aria-label="Anterior">Anterior</button>
-                         <button id="next-slide-mobile" class="cta-button w-24 bg-primary-blue text-accent-white font-futuristic uppercase px-4 py-2 rounded-lg" aria-label="Próximo">Próximo</button>
+                    <div class="p-6 bg-gray-900/50 rounded-2xl border border-nova-neon/30 transform hover:-translate-y-1 transition duration-300 animate-on-scroll" style="transition-delay: 300ms;">
+                        <i data-lucide="gem" class="w-10 h-10 text-nova-neon mb-4"></i>
+                        <h3 class="text-2xl font-semibold text-white mb-3">Valores</h3>
+                        <p class="text-gray-300">Inovação contínua, Transparência, Colaboração, Excelência e Paixão pelo resultado.</p>
                     </div>
-
                 </div>
             </div>
         </section>
-        
-        <!-- 5. Seção Blog/Notícias (REMOVIDA) -->
 
-        <!-- 6. Seção Contato/Agendamento (Formulário) - Título Atualizado -->
-        <section id="contato" class="py-20 md:py-32 bg-detail-black">
-            <div class="container mx-auto px-4 max-w-3xl">
-                <h2 class="text-4xl md:text-5xl font-futuristic font-bold text-center mb-12 fade-in-on-scroll">
-                    Agendamento de <span class="text-danger-red">Serviço</span>
-                </h2>
+        <section id="servicos" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
+            <div class="max-w-7xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">NOSSOS <span class="text-nova-neon">SERVIÇOS</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-16 animate-on-scroll">A arquitetura digital que sua empresa precisa para dominar o mercado do futuro.</p>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll"><i data-lucide="monitor" class="w-8 h-8 text-nova-neon mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Web Design Futurista</h3><p class="text-gray-400">Criação de websites, landing pages e e-commerces ultra-modernos, focados em usabilidade e performance em todas as plataformas.</p></div>
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 100ms;"><i data-lucide="briefcase" class="w-8 h-8 text-nova-neon mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Gestão Empresarial</h3><p class="text-gray-400">Consultoria estratégica e implementação de sistemas para otimização de processos, melhoria de performance e planejamento de crescimento.</p></div>
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 200ms;"><i data-lucide="palette" class="w-8 h-8 text-nova-neon mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Branding e Identidade Visual</h3><p class="text-gray-400">Construção de marcas poderosas e identidades visuais que comunicam inovação e exclusividade em qualquer meio.</p></div>
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 300ms;"><i data-lucide="trending-up" class="w-8 h-8 text-nova-neon mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Marketing Digital Estratégico</h3><p class="text-gray-400">SEO, campanhas de tráfego pago (Ads) e estratégias de conteúdo para garantir visibilidade e conversão em alta performance.</p></div>
+                    <div class="bg-black/50 p-6 rounded-xl border border-nova-dark/50 hover:border-nova-neon transition duration-300 shadow-xl animate-on-scroll" style="transition-delay: 500ms;"><i data-lucide="video" class="w-8 h-8 text-nova-neon mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Produção de Vídeo e Motion</h3><p class="text-gray-400">Criação de vídeos institucionais, animadas e motion graphics com acabamento cinematográfico e visual futurista.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="feedbacks" class="py-20 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4 text-white animate-on-scroll">O QUE DIZEM NOSSOS <span class="text-nova-neon">CLIENTES</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <p class="text-lg text-gray-400 max-w-4xl mx-auto mb-12 animate-on-scroll">Nossos parceiros e a prova do nosso impacto no mercado.</p>
                 
-                <div class="bg-primary-blue p-8 md:p-12 rounded-xl shadow-2xl border-t-4 border-danger-red fade-in-on-scroll delay-100">
-                    <p class="text-gray-300 mb-6 text-center">
-                        Preencha o formulário e agende o melhor horário para o seu serviço. Entraremos em contato para confirmar!
-                    </p>
+                <!-- CONTEÚDO DE FALLBACK DOS DEPOIMENTOS - SEMPRE VISÍVEL ATÉ SER SUBSTITUTÍDO PELO FIREBASE -->
+                <div id="feedbacks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll">
+                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"A Novan Agency transformou totalmente nossa presença digital. Nosso tráfego aumentou em 70% e as conversões dispararam. Super recomendo!"</p></div>
+                        <p class="font-bold text-nova-neon">Lucas M., empresário.</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 100ms;">
+                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"Equipe extremamente dedicada e criativa. A Novan Agency trouxe soluções inovadoras para nosso marketing. Resultado excelente!"</p></div>
+                        <p class="font-bold text-nova-neon">Ana S., gerente de marketing.</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-6 rounded-2xl shadow-xl border border-nova-neon/30 backdrop-blur-sm transform hover:scale-[1.02] transition duration-300 animate-on-scroll" style="transition-delay: 200ms;">
+                        <div class="flex items-center mb-3"><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i><i data-lucide="star" class="w-5 h-5 fill-yellow-400 text-yellow-400 inline-block"></i></div>
+                        <div class="text-lg italic text-gray-200 mb-4 min-h-24"><p class="testimonial-text">"Profissionalismo e inovação definem a Novan. Desde que começamos a trabalhar juntos, nosso engajamento nas redes sociais triplicou."</p></div>
+                        <p class="font-bold text-nova-neon">João P., empreendedor digital.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                    <form id="agendamento-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
-                        <div>
-                            <label for="nome" class="block text-sm font-futuristic text-accent-white mb-1">Nome Completo</label>
-                            <input type="text" id="nome" name="nome" required class="w-full p-3 rounded-lg futuristic-input" placeholder="Seu nome">
+        <section id="contato" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/40">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-4xl font-bold mb-4 text-center text-white animate-on-scroll">COMECE SEU <span class="text-nova-neon">PROJETO</span></h2>
+                <div class="section-separator animate-on-scroll"></div>
+                <div class="grid lg:grid-cols-2 gap-12 mt-12">
+                    <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-2xl animate-on-scroll">
+                        <h3 class="text-2xl font-semibold text-white mb-6">Fale com um Especialista</h3>
+                        <form onsubmit="window.handleContactSubmit(event)" class="space-y-4">
+                            <div><label for="name" class="block text-sm font-medium text-gray-300">Nome Completo</label><input type="text" id="name" name="name" required class="mt-1 block w-full bg-gray-800 border border-nova-dark/50 text-white rounded-lg p-3 focus:ring-nova-neon focus:border-nova-neon transition duration-200"></div>
+                            <div><label for="email" class="block text-sm font-medium text-gray-300">Email Profissional</label><input type="email" id="email" name="email" required class="mt-1 block w-full bg-gray-800 border border-nova-dark/50 text-white rounded-lg p-3 focus:ring-nova-neon focus:border-nova-neon transition duration-200"></div>
+                            <div><label for="phone" class="block text-sm font-medium text-gray-300">Telefone (opcional)</label><input type="tel" id="phone" name="phone" class="mt-1 block w-full bg-gray-800 border border-nova-dark/50 text-white rounded-lg p-3 focus:ring-nova-neon focus:border-nova-neon transition duration-200"></div>
+                            <div><label for="message" class="block text-sm font-medium text-gray-300">Sua Mensagem / Detalhes do Projeto</label><textarea id="message" name="message" rows="4" required class="mt-1 block w-full bg-gray-800 border border-nova-dark/50 text-white rounded-lg p-3 focus:ring-nova-neon focus:border-nova-neon transition duration-200"></textarea></div>
+                            <div id="form-status" class="text-sm font-semibold pt-2"></div>
+                            <button type="submit" class="w-full py-3 bg-nova-neon text-white font-bold rounded-lg hover:bg-nova-dark transition duration-300 neon-glow">Enviar Proposta</button>
+                        </form>
+                    </div>
+                    <div class="space-y-8 animate-on-scroll" style="transition-delay: 150ms;">
+                        <div class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl space-y-6">
+                            <h3 class="text-2xl font-semibold text-white mb-4">Conexão Imediata</h3>
+                            <a href="https://wa.me/message/OXVXX2GXIAX6H1" target="_blank" class="flex items-center space-x-4 p-3 rounded-lg bg-green-600 hover:bg-green-700 transition duration-300 text-white font-bold"><i data-lucide="message-circle" class="w-6 h-6 fill-white"></i><span>WhatsApp: Acessar Chat Direto (Início Rápido)</span></a>
+                            <div class="flex items-center space-x-4"><i data-lucide="mail" class="w-6 h-6 text-nova-neon"></i><a href="mailto:agencynovan@gmail.com" class="text-gray-300 hover:text-nova-neon transition duration-300">Email: agencynovan@gmail.com</a></div>
+                            <div class="flex items-center space-x-6 pt-4"><span class="text-gray-300">Nossa Rede:</span><a href="https://www.instagram.com/novanagency_/" target="_blank" class="text-gray-400 hover:text-nova-neon transition duration-300"><i data-lucide="instagram" class="w-6 h-6"></i></a></div>
                         </div>
-                        <div>
-                            <label for="email" class="block text-sm font-futuristic text-accent-white mb-1">E-mail</label>
-                            <input type="email" id="email" name="email" required class="w-full p-3 rounded-lg futuristic-input" placeholder="seuemail@exemplo.com">
+                        <div id="results-section" class="bg-black/50 p-8 rounded-2xl border border-nova-dark/50 shadow-xl">
+                            <h3 class="text-2xl font-semibold text-white mb-2">Nossos Resultados</h3>
+                            <p class="text-gray-400 mb-6">Crescimento constante, com dados que falam por si.</p>
+                            <div class="space-y-5">
+                                <div class="flex items-center animate-on-scroll">
+                                    <i data-lucide="package-check" class="w-10 h-10 text-nova-neon mr-4"></i>
+                                    <div>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="120">0</span></p>
+                                        <p class="text-gray-400">projetos entregues</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center animate-on-scroll" style="animation-delay: 100ms">
+                                    <i data-lucide="smile" class="w-10 h-10 text-nova-neon mr-4"></i>
+                                    <div>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="95">0</span>%</p>
+                                        <p class="text-gray-400">de satisfação</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center animate-on-scroll" style="animation-delay: 200ms">
+                                    <i data-lucide="users" class="w-10 h-10 text-nova-neon mr-4"></i>
+                                    <div>
+                                        <p class="text-3xl font-bold text-white">+<span data-target="12354">0</span></p>
+                                        <p class="text-gray-400">leads gerados</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="telefone" class="block text-sm font-futuristic text-accent-white mb-1">Telefone (WhatsApp)</label>
-                            <input type="tel" id="telefone" name="telefone" required class="w-full p-3 rounded-lg futuristic-input" placeholder="(35) 9 xxxx-xxxx">
-                        </div>
-                        <div>
-                            <label for="servico" class="block text-sm font-futuristic text-accent-white mb-1">Serviço Desejado</label>
-                            <select id="servico" name="servico" required class="w-full p-3 rounded-lg futuristic-input">
-                                <option value="" disabled selected>Selecione um Serviço</option>
-                                <option value="troca_oleo">Troca de Óleo</option>
-                                <option value="alinhamento">Alinhamento e Balanceamento</option>
-                                <option value="revisao">Revisão Preventiva</option>
-                                <option value="mecanica">Mecânica Completa</option>
-                                <option value="injecao">Injeção Eletrônica</option>
-                                <option value="freios_suspensao">Freios e Suspensão</option>
-                                <option value="outro">Outro (especificar abaixo)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="mensagem" class="block text-sm font-futuristic text-accent-white mb-1">Mensagem / Detalhes</label>
-                            <textarea id="mensagem" name="mensagem" rows="4" class="w-full p-3 rounded-lg futuristic-input" placeholder="Descreva o modelo do veículo e o problema/serviço..."></textarea>
-                        </div>
-                        
-                        <button type="submit" class="cta-button w-full bg-danger-red text-accent-white font-futuristic uppercase px-6 py-3 rounded-lg font-bold">
-                            Agendar Serviço
-                        </button>
-                        
-                        <div id="form-message" class="mt-4 text-center text-lg hidden"></div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Rodapé (Footer Fixo) - Mapa integrado -->
-    <footer class="bg-primary-blue border-t-4 border-danger-red py-10 md:py-16 text-gray-300">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                
-                <!-- Coluna 1: Logo e Slogan -->
-                <div>
-                    <a href="#home" class="text-xl font-futuristic text-accent-white logo-pulse tracking-widest block mb-4">
-                        OFS
-                    </a>
-                    <p class="text-sm">
-                        "Qualidade e confiança em cada reparo"
-                        <br><span class="text-danger-red font-bold">Qualidade e Preço Justo</span>
-                    </p>
-                </div>
-
-                <!-- Coluna 2: Contato Rápido -->
-                <div>
-                    <h4 class="text-lg font-futuristic font-bold text-accent-white mb-4 border-b border-cyan-400/50 pb-1">Contato</h4>
-                    <p class="mb-2">Telefone:</p>
-                    <a href="tel:+5535998294191" class="text-cyan-400 hover:underline transition duration-300">(35) 9 9829-4191</a>
-                    <p class="mt-4 mb-2">E-mail:</p>
-                    <a href="mailto:contato@oficinafelipesantos.com.br" class="text-cyan-400 hover:underline transition duration-300">contato@oficinafelipesantos.com.br</a>
-                </div>
-
-                <!-- Coluna 3: Localização e Horário -->
-                <div>
-                    <h4 class="text-lg font-futuristic font-bold text-accent-white mb-4 border-b border-cyan-400/50 pb-1">Localização</h4>
-                    <address class="not-italic mb-4">
-                        R. Ver. João de Siqueira Loiola, 209<br>
-                        Jardim Campos Elisios, Poços de Caldas - MG
-                    </address>
-                    
-                    <h4 class="text-lg font-futuristic font-bold text-accent-white mb-2">Horário</h4>
-                    <p>Segunda a Sábado – 07h30 às 19h30</p>
-                </div>
-
-                <!-- Coluna 4: Redes Sociais e Mapa -->
-                <div>
-                    <h4 class="text-lg font-futuristic font-bold text-accent-white mb-4 border-b border-cyan-400/50 pb-1">Redes e Mapa</h4>
-                    <div class="flex space-x-4 mb-6">
-                        <!-- Placeholder de Ícones de Redes Sociais (SVG simples) -->
-                        <a href="#" aria-label="Instagram" class="hover:text-cyan-400 transition duration-300">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.772 1.666 4.925 4.925.058 1.267.07 1.647.07 4.85s-.012 3.584-.07 4.85c-.148 3.252-1.666 4.772-4.925 4.925-1.267.058-1.647.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.772-1.666-4.925-4.925-.058-1.267-.07-1.647-.07-4.85s.012-3.584.07-4.85c.148-3.252 1.666-4.772 4.925-4.925 1.267-.058 1.647-.07 4.85-.07zm0 2.131c-3.189 0-3.58.012-4.814.07-2.636.12-3.64 1.124-3.762 3.762-.058 1.234-.07 1.625-.07 4.814s.012 3.58.07 4.814c.12 2.636 1.124 3.64 3.762 3.762 1.234.058 1.625.07 4.814.07s3.58-.012 4.814-.07c2.636-.12 3.64-1.124 3.762-3.762.058-1.234.07-1.625.07-4.814s-.012-3.58-.07-4.814c-.12-2.636-1.124-3.64-3.762-3.762-1.234-.058-1.625-.07-4.814-.07zm0 1.956c-2.88 0-5.232 2.352-5.232 5.232s2.352 5.232 5.232 5.232 5.232-2.352 5.232-5.232-2.352-5.232-5.232-5.232zm0 8.65c-1.88 0-3.418-1.538-3.418-3.418s1.538-3.418 3.418-3.418 3.418 1.538 3.418 3.418-1.538 3.418-3.418 3.418zm5.244-7.443c-.454 0-.822-.368-.822-.822s.368-.822.822-.822.822.368.822.822-.368.822-.822.822z"/></svg>
-                        </a>
-                        <a href="#" aria-label="Facebook" class="hover:text-cyan-400 transition duration-300">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.015c-5.419 0-9.835 4.417-9.835 9.835 0 5.42 4.416 9.835 9.835 9.835 5.42 0 9.835-4.415 9.835-9.835 0-5.418-4.415-9.835-9.835-9.835zm.799 15.68h-1.598v-4.144h-2.182v-1.789h2.182v-1.332c0-2.352 1.437-3.633 3.633-3.633 1.037 0 1.928.077 2.183.112v1.94h-1.15c-1.144 0-1.365.544-1.365 1.34v1.071h2.559l-.333 1.789h-2.226v4.144z"/></svg>
-                        </a>
-                        <a href="https://api.whatsapp.com/send?phone=5535998294191" aria-label="WhatsApp" class="hover:text-cyan-400 transition duration-300">
-                             <!-- SVG Ícone do WhatsApp -->
-                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.039 2c-5.414 0-9.805 4.391-9.805 9.805 0 1.928.563 3.843 1.638 5.485l-1.758 6.453 6.64-1.737c1.623.882 3.473 1.35 5.285 1.35 5.414 0 9.805-4.391 9.805-9.805S17.453 2 12.039 2zm.006 17.807c-1.637 0-3.23-.42-4.636-1.218l-.33-.198-3.417.896.903-3.32-.213-.341c-.886-1.417-1.358-3.044-1.358-4.685 0-4.37 3.551-7.921 7.921-7.921 2.11 0 4.098.818 5.594 2.316 1.498 1.498 2.316 3.484 2.316 5.594 0 4.37-3.551 7.921-7.921 7.921zm4.07-5.328c-.223-.111-.328-.179-.472-.c328-.097.147-.376.481-.456.58-.081.099-.16.111-.296.074-.482-.143-1.545-.568-2.94-1.815-1.082-.962-1.808-2.155-2.029-2.522-.222-.367-.024-.564.088-.663.097-.086.216-.24.328-.367.111-.111.148-.198.216-.328.062-.132.03-.25-.015-.355-.047-.105-.433-1.037-.592-1.423-.159-.387-.322-.328-.433-.335-.111-.007-.23-.007-.376-.007-.146 0-.376.055-.572.335-.196.279-.747.728-.747 1.785 0 1.056.762 2.07 1.096 2.502.335.432 1.545 2.507 3.733 3.432 2.188.925 2.766.86 3.292.816.527-.044.87-.367.994-.735.125-.367.125-.68.088-.735-.037-.055-.133-.082-.25-.137z"/></svg>
-                        </a>
-                    </div>
-                    
-                    <!-- Mapa Integrado (Endereço Fornecido) -->
-                    <div class="w-full h-40 bg-detail-black rounded-lg border border-primary-blue/50">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.21557008713!2d-46.5137716240292!3d-21.79957058021028!2m3!1f0!2f0!0f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c9e804741d87a1%3A0xa73d1ca56f0139ba!2sR.%20Ver.%20Jo%C3%A3o%20de%20Siqueira%20Loiola%2C%20209%20-%20Jardim%20Campos%20Elisios%2C%20Po%C3%A7os%20de%20Caldas%20-%20MG%2C%2037706-029!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0; border-radius: 8px;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
-
+    <footer class="bg-black/70 py-8 px-4 sm:px-6 lg:px-8 border-t border-nova-dark/50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+            <div class="mb-4 md:mb-0">
+                <p class="text-gray-400">&copy; 2025 Novan Agency. Todos os direitos reservados. Design Futurista.</p>
+                <p class="text-xs text-gray-600 mt-1">Desenvolvido com tecnologia de ponta e paixão por inovação.</p>
             </div>
-
-            <div class="mt-10 pt-6 border-t border-primary-blue/50 text-center text-sm text-gray-500">
-                &copy; 2025 Oficina Felipe Santos. Todos os direitos reservados.
+            <div class="flex space-x-6 text-gray-400">
+                <a href="#sobre" class="hover:text-nova-neon transition duration-300">Política de Privacidade</a>
+                <a href="#contato" class="hover:text-nova-neon transition duration-300">Termos de Uso</a>
             </div>
+        </div>
     </footer>
 
-    <!-- Botão Flutuante de Contato (WhatsApp) -->
-    <!-- Adicionada classe 'whatsapp-button-img' para usar a imagem de fundo -->
-    <a href="https://api.whatsapp.com/send?phone=5535998294191&text=Olá! Gostaria de agendar um serviço." target="_blank" 
-       class="fixed bottom-6 right-6 z-50 cta-button rounded-full shadow-lg transform hover:scale-105 whatsapp-button-img" 
-       aria-label="Fale Conosco pelo WhatsApp">
-        <!-- O SVG foi mantido, mas será escondido via CSS para que a imagem apareça -->
-        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.039 2c-5.414 0-9.805 4.391-9.805 9.805 0 1.928.563 3.843 1.638 5.485l-1.758 6.453 6.64-1.737c1.623.882 3.473 1.35 5.285 1.35 5.414 0 9.805-4.391 9.805-9.805S17.453 2 12.039 2zm.006 17.807c-1.637 0-3.23-.42-4.636-1.218l-.33-.198-3.417.896.903-3.32-.213-.341c-.886-1.417-1.358-3.044-1.358-4.685 0-4.37 3.551-7.921 7.921-7.921 2.11 0 4.098.818 5.594 2.316 1.498 1.498 2.316 3.484 2.316 5.594 0 4.37-3.551 7.921-7.921 7.921zm4.07-5.328c-.223-.111-.328-.179-.472-.c328-.097.147-.376.481-.456.58-.081.099-.16.111-.296.074-.482-.143-1.545-.568-2.94-1.815-1.082-.962-1.808-2.155-2.029-2.522-.222-.367-.024-.564.088-.663.097-.086.216-.24.328-.367.111-.111.148-.198.216-.328.062-.132.03-.25-.015-.355-.047-.105-.433-1.037-.592-1.423-.159-.387-.322-.328-.433-.335-.111-.007-.23-.007-.376-.007-.146 0-.376.055-.572.335-.196.279-.747.728-.747 1.785 0 1.056.762 2.07 1.096 2.502.335.432 1.545 2.507 3.733 3.432 2.188.925 2.766.86 3.292.816.527-.044.87-.367.994-.735.125-.367.125-.68.088-.735-.037-.055-.133-.082-.25-.137z"/></svg>
-    </a>
+    <div class="fixed bottom-6 right-6 z-[1000] flex flex-col space-y-3">
+        <a href="https://wa.me/message/OXVXX2GXIAX6H1" target="_blank" class="w-14 h-14 bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105" title="Fale conosco pelo WhatsApp"><i data-lucide="message-circle" class="w-7 h-7"></i></a>
+        <a href="https://www.instagram.com/novanagency_/" target="_blank" class="w-14 h-14 bg-pink-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-pink-700 transition duration-300 transform hover:scale-105" title="Siga-nos no Instagram"><i data-lucide="instagram" class="w-6 h-6"></i></a>
+    </div>
 
-    <!-- Lógica JavaScript para Interatividade e Animações -->
+    <div id="visitor-counter" class="fixed bottom-6 left-6 z-[1000] flex items-center space-x-2 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-full border border-white/20 text-sm">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        <span id="visitor-count-number" class="text-white font-medium">0</span>
+        <span class="text-gray-400">online</span>
+    </div>
+
+    <!-- Modal de Sucesso -->
+    <div id="success-modal" class="fixed inset-0 z-[1001] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-gray-900/80 border border-nova-neon/50 p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 transform transition-all animate-on-scroll">
+            <i data-lucide="check-circle" class="w-16 h-16 text-green-400 mx-auto mb-4"></i>
+            <h3 class="text-2xl font-bold text-white mb-2">Enviado com Sucesso!</h3>
+            <p class="text-gray-300 mb-6">Sua mensagem foi enviada. Em breve, nossa equipe entrará em contato.</p>
+            <button id="close-modal-btn" class="bg-nova-neon text-white font-bold py-2 px-6 rounded-full hover:bg-nova-dark transition duration-300">Fechar</button>
+        </div>
+    </div>
+
     <script>
-        // Variável de controle do menu móvel
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const header = document.getElementById('header');
-        const navLinks = document.querySelectorAll('#mobile-menu a');
+        lucide.createIcons();
         
-        // 1. Toggle do Menu Mobile
-        menuToggle.addEventListener('click', () => {
+        const menuButton = document.getElementById('menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        window.toggleMenu = () => {
             mobileMenu.classList.toggle('hidden');
+            const icon = menuButton.querySelector('i');
+            icon.setAttribute('data-lucide', mobileMenu.classList.contains('hidden') ? 'menu' : 'x');
+            lucide.createIcons();
+        }
+        menuButton.addEventListener('click', window.toggleMenu);
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
         });
 
-        // Fecha o menu móvel ao clicar em um link
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (!mobileMenu.classList.contains('hidden')) {
-                    mobileMenu.classList.add('hidden');
+        const typingIntervals = new Map();
+        
+        const successModal = document.getElementById('success-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalContent = successModal.querySelector('div');
+
+        closeModalBtn.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) {
+                successModal.classList.add('hidden');
+            }
+        });
+
+
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Animação de entrada geral
+                 if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                 } else {
+                    entry.target.classList.remove('is-visible');
+                 }
+                
+                // Animação de digitação para depoimentos
+                const textElement = entry.target.querySelector('.testimonial-text');
+                if (textElement) {
+                    if (entry.isIntersecting) {
+                        if (!textElement.dataset.typed) {
+                            textElement.dataset.typed = 'true';
+                            const originalText = textElement.getAttribute('data-original-text');
+                            textElement.textContent = '';
+                            let i = 0;
+                            const typingSpeed = 35; // Velocidade ajustada
+
+                            const typer = setInterval(() => {
+                                if (i < originalText.length) {
+                                    textElement.textContent += originalText.charAt(i);
+                                    i++;
+                                } else {
+                                    clearInterval(typer);
+                                    typingIntervals.delete(textElement);
+                                }
+                            }, typingSpeed);
+                            typingIntervals.set(textElement, typer);
+                        }
+                    } else {
+                        if (typingIntervals.has(textElement)) {
+                            clearInterval(typingIntervals.get(textElement));
+                            typingIntervals.delete(textElement);
+                        }
+                        delete textElement.dataset.typed;
+                        if(textElement.hasAttribute('data-original-text')) {
+                           textElement.textContent = ''; 
+                        }
+                    }
+                }
+
+                // Animação de contagem para resultados
+                const counters = entry.target.querySelectorAll('[data-target]');
+                if (entry.isIntersecting && counters.length > 0) {
+                    counters.forEach(counter => {
+                        if (counter.dataset.counted) return; 
+                        counter.dataset.counted = 'true';
+
+                        const target = +counter.dataset.target;
+                        let current = 0;
+                        const duration = 2000;
+                        const incrementTime = 20; 
+                        const step = (target / duration) * incrementTime;
+                        
+                        const timer = setInterval(() => {
+                            current += step;
+                            if (current >= target) {
+                                clearInterval(timer);
+                                counter.innerText = target;
+                            } else {
+                                counter.innerText = Math.ceil(current);
+                            }
+                        }, incrementTime);
+                    });
                 }
             });
-        });
+        }, { threshold: 0.2 });
 
-        // 2. Parallax Simples na Seção Home
-        const parallaxBg = document.getElementById('parallax-bg');
-        if (parallaxBg) {
-            window.addEventListener('scroll', () => {
-                const scrollPosition = window.pageYOffset;
-                // Move o background 50% mais lento que o scroll
-                // O scale(1.05) evita que as bordas do desfoque apareçam
-                parallaxBg.style.transform = `translateY(${scrollPosition * 0.5}px) scale(1.05)`; 
+        window.observeNewElements = () => {
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                const textElement = el.querySelector('.testimonial-text');
+                if (textElement && !textElement.hasAttribute('data-original-text')) {
+                    textElement.setAttribute('data-original-text', textElement.textContent);
+                    textElement.textContent = '';
+                }
+                scrollObserver.observe(el);
             });
-        }
+        };
         
-        // 3. Sistema de Agendamento (Simulação)
-        function handleFormSubmit(event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
-            
-            const form = event.target;
-            const formMessage = document.getElementById('form-message');
-            
-            // Simulação de envio seguro (Em um ambiente real, esta URL seria para um backend seguro)
-            console.log('Dados do Formulário (Simulação de Envio):', {
-                nome: form.nome.value,
-                email: form.email.value,
-                telefone: form.telefone.value,
-                servico: form.servico.value,
-                mensagem: form.mensagem.value
-            });
+        window.observeNewElements();
 
-            // Exibe mensagem de sucesso
-            formMessage.innerHTML = '<p class="text-green-400 font-futuristic">Agendamento Solicitado com Sucesso! Entraremos em contato em breve para confirmar os detalhes.</p>';
-            formMessage.classList.remove('hidden');
-            form.reset(); // Limpa o formulário
+        // --- CONTADOR DE VISITANTES FICTÍCIO ---
+        const visitorCountElement = document.getElementById('visitor-count-number');
+        let currentVisitors = Math.floor(Math.random() * (12 - 5 + 1)) + 5;
+        visitorCountElement.textContent = currentVisitors;
 
-            // Oculta a mensagem após 5 segundos
-            setTimeout(() => {
-                formMessage.classList.add('hidden');
-            }, 5000);
+        function updateVisitorCount() {
+            const change = Math.random() > 0.5 ? 1 : -1;
+            let newVisitors = currentVisitors + change;
+            
+            if (newVisitors > 14) newVisitors = 13;
+            if (newVisitors < 2) newVisitors = 3;
+
+            currentVisitors = newVisitors;
+            visitorCountElement.textContent = currentVisitors;
+
+            const randomInterval = Math.random() * 3000 + 2000; // entre 2s e 5s
+            setTimeout(updateVisitorCount, randomInterval);
         }
-
-        // 4. Animação de Fade-In ao Rolar a Página (Intersection Observer)
-        document.addEventListener('DOMContentLoaded', () => {
-            const observerOptions = {
-                root: null, // viewport
-                rootMargin: '0px',
-                threshold: 0.1 // 10% do elemento visível
-            };
-
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        // Adiciona a classe de visibilidade
-                        entry.target.classList.add('is-visible');
-                        // Para de observar depois de animar
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
-
-            // Observa todos os elementos com a classe 'fade-in-on-scroll'
-            const elements = document.querySelectorAll('.fade-in-on-scroll');
-            elements.forEach(el => observer.observe(el));
-
-
-            // 5. Lógica do Carrossel de Depoimentos (com Autoplay)
-            const slides = Array.from(document.querySelectorAll('.testimonial-slide-item'));
-            const nextButton = document.getElementById('next-slide');
-            const prevButton = document.getElementById('prev-slide');
-            const nextButtonMobile = document.getElementById('next-slide-mobile');
-            const prevButtonMobile = document.getElementById('prev-slide-mobile');
-            const indicatorsContainer = document.getElementById('slide-indicators');
-
-            let currentSlide = 0;
-            let autoplayInterval;
-            const AUTOPLAY_SPEED = 3500; // 3.5 segundos (Acelerado)
-
-            function updateSlider() {
-                // Esconde todos e só mostra o ativo
-                slides.forEach((slide, index) => {
-                    slide.classList.remove('active');
-                    if (index === currentSlide) {
-                        slide.classList.add('active');
-                    }
-                });
-
-                // Atualiza indicadores
-                updateIndicators();
-            }
-
-            function nextSlide() {
-                currentSlide = (currentSlide + 1) % slides.length;
-                updateSlider();
-            }
-
-            function prevSlide() {
-                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-                updateSlider();
-            }
-
-            function startAutoplay() {
-                // Limpa o intervalo anterior antes de iniciar um novo
-                clearInterval(autoplayInterval); 
-                // Define um novo intervalo
-                autoplayInterval = setInterval(nextSlide, AUTOPLAY_SPEED); 
-            }
-
-            function updateIndicators() {
-                indicatorsContainer.innerHTML = '';
-                slides.forEach((_, index) => {
-                    const indicator = document.createElement('button');
-                    indicator.classList.add('w-3', 'h-3', 'rounded-full', 'transition', 'duration-300', 'focus:outline-none');
-                    if (index === currentSlide) {
-                        // Cor do indicador ativo agora é o danger-red
-                        indicator.classList.add('bg-danger-red'); 
-                    } else {
-                        indicator.classList.add('bg-primary-blue', 'hover:bg-primary-blue/50');
-                    }
-                    indicator.addEventListener('click', () => {
-                        currentSlide = index;
-                        updateSlider();
-                        startAutoplay(); // Reinicia o autoplay após navegação manual
-                    });
-                    indicatorsContainer.appendChild(indicator);
-                });
-            }
-
-            // Inicialização e Event Listeners
-            if (slides.length > 0) {
-                // Botoes Desktop
-                nextButton.addEventListener('click', () => { nextSlide(); startAutoplay(); });
-                prevButton.addEventListener('click', () => { prevSlide(); startAutoplay(); });
-                
-                // Botoes Mobile
-                nextButtonMobile.addEventListener('click', () => { nextSlide(); startAutoplay(); });
-                prevButtonMobile.addEventListener('click', () => { prevSlide(); startAutoplay(); });
-                
-                updateSlider(); // Exibe o primeiro slide ao carregar
-                startAutoplay(); // Inicia o carrossel automático
-            }
-        });
-
+        setTimeout(updateVisitorCount, 2500); // Inicia a oscilação
     </script>
 </body>
 </html>
+
